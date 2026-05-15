@@ -95,9 +95,7 @@ export default function Login() {
                 Register
               </Link>
             </p>
-            <p className="mt-4 text-center text-xs text-muted">
-              Demo admin login: <span className="font-semibold text-primary">admin@khyathi.com / Admin@123</span>
-            </p>
+            
           </div>
         </div>
       </section>
