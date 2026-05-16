@@ -5,9 +5,9 @@ export default function AndhraPradeshSarees() {
     <div className="min-h-screen bg-[#faf7f2] px-6 py-16 text-[#1C120A]">
       <SEO
         title="Trending Sarees in Andhra Pradesh | Khyathi Collections"
-        description="Shop trending sarees in Andhra Pradesh including silk sarees, bridal sarees, designer sarees, and traditional saree collections."
-        keywords="sarees in Andhra Pradesh, silk sarees Andhra Pradesh, bridal sarees Andhra Pradesh"
-        image="https://khyathicollections.com/banner.jpg"
+        description="Shop trending sarees in Andhra Pradesh including silk sarees, bridal sarees, wedding sarees, and designer collections."
+        keywords="sarees in Andhra Pradesh, bridal sarees Andhra Pradesh, silk sarees Andhra Pradesh"
+        image="https://khyathicollections.com/logo.png"
         url="https://khyathicollections.com/sarees-in-andhra-pradesh"
       />
 
@@ -17,8 +17,13 @@ export default function AndhraPradeshSarees() {
         </h1>
 
         <p className="mb-5 text-lg leading-8">
-          Khyathi Collections brings premium saree collections across Andhra Pradesh including
-          bridal sarees, silk sarees, designer sarees, and traditional ethnic fashion.
+          Khyathi Collections offers premium silk sarees, bridal sarees,
+          wedding sarees, and designer saree collections across Andhra Pradesh.
+        </p>
+
+        <p className="text-lg leading-8">
+          Explore luxury traditional sarees for weddings, festivals,
+          engagements, receptions, and celebrations.
         </p>
       </div>
     </div>
