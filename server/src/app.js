@@ -20,14 +20,13 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin(origin, callback) {
-      // Allow same-machine tools and approved frontends in development.
-      if (!origin || env.clientUrls.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(new Error(`CORS blocked for origin: ${origin}`));
-    },
+    origin: [
+      'https://khyathicollections.com',
+      'https://www.khyathicollections.com',
+      'https://kathi522601-6r9n.vercel.app',
+      'http://localhost:5173',
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
   }),
 );
