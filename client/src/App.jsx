@@ -15,7 +15,12 @@ import ChatbotButton from './components/chatbot/ChatbotButton';
 import ChatbotPanel from './components/chatbot/ChatbotPanel';
 import FestivalBannerOverlay from './components/home/FestivalBannerOverlay';
 import InstagramSurprisePopup from './components/ui/InstagramSurprisePopup';
-
+import HyderabadSarees from './pages/seo/HyderabadSarees';
+import BangaloreSarees from './pages/seo/BangaloreSarees';
+import AndhraPradeshSarees from './pages/seo/AndhraPradeshSarees';
+import VijayawadaSarees from './pages/seo/VijayawadaSarees';
+import GunturSarees from './pages/seo/GunturSarees';
+import OngoleSarees from './pages/seo/OngoleSarees';
 const Home = lazy(() => import('./pages/Home'));
 const Shop = lazy(() => import('./pages/Shop'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
@@ -75,6 +80,12 @@ export default function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
+            <Route path="/sarees-in-hyderabad" element={<HyderabadSarees />} />
+<Route path="/sarees-in-bangalore" element={<BangaloreSarees />} />
+<Route path="/sarees-in-andhra-pradesh" element={<AndhraPradeshSarees />} />
+<Route path="/sarees-in-vijayawada" element={<VijayawadaSarees />} />
+<Route path="/sarees-in-guntur" element={<GunturSarees />} />
+<Route path="/sarees-in-ongole" element={<OngoleSarees />} />
             <Route
               path="/receipt/:orderId"
               element={
