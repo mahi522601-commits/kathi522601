@@ -6,7 +6,7 @@ import ColorSwatch from '../components/ui/ColorSwatch';
 import ImageGallery from '../components/ui/ImageGallery';
 import ProductCard from '../components/ui/ProductCard';
 import QuantitySelector from '../components/ui/QuantitySelector';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import  LoadingSpinner  from '../components/ui/LoadingSpinner';
 import { useCart } from '../hooks/useCart';
 import { useProducts } from '../hooks/useProducts';
 import { useWishlist } from '../hooks/useWishlist';
