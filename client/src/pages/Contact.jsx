@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { Mail, MapPin, MessageSquare, Phone } from 'lucide-react';
 import contactApi from '../api/contactApi';
 import { siteConfig } from '../config/site';
+import SEO from '../components/SEO';
 
 function saveMessageLocally(payload) {
   try {
@@ -69,9 +70,13 @@ export default function Contact() {
 
   return (
     <>
-      <Helmet>
-        <title>Contact | Khyathi Collections</title>
-      </Helmet>
+      <SEO
+  title="Contact Khyathi Collections | Saree Store"
+  description="Contact Khyathi Collections for premium sarees, bridal sarees, silk sarees, and traditional collections in Hyderabad and Andhra Pradesh."
+  keywords="contact saree shop, Hyderabad sarees, Andhra sarees"
+  image="https://khyathicollections.com/banner.jpg"
+  url="https://khyathicollections.com/contact"
+/>
       <section className="section-block">
         <div className="page-shell">
           <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
