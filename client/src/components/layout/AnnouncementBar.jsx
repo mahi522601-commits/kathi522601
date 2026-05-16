@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 const ANNOUNCEMENTS = [
   'Free shipping across India for every order.',
   'Curated sarees and jewellery with a premium festive finish.',
-  'Secure online payments with Razorpay.',
+  'Secure online payments with PhonePe, Google Pay, and Paytm.',
   'Discover luxury ethnic edits for weddings, gifting, and celebrations.',
   'Personal styling support available from our Narasaropet team.',
 ];

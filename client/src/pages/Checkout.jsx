@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, CreditCard, Landmark, RefreshCw, ShieldCheck, XCircle } from 'lucide-react';
+import { Check, RefreshCw, ShieldCheck, XCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -15,6 +15,27 @@ import { siteConfig } from '../config/site';
 
 const STEP_LABELS = ['Delivery', 'Payment', 'Review'];
 
+const PAYMENT_APPS = [
+  {
+    id: 'phonepe',
+    name: 'PhonePe',
+    logo: 'पे',
+    className: 'bg-[#5f259f] text-white',
+  },
+  {
+    id: 'googlepay',
+    name: 'Google Pay',
+    logo: 'G',
+    className: 'bg-white text-[#1a73e8]',
+  },
+  {
+    id: 'paytm',
+    name: 'Paytm',
+    logo: 'Pay',
+    className: 'bg-[#eaf7ff] text-[#00baf2]',
+  },
+];
+
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, subtotal, clearCart } = useCart();
@@ -24,6 +45,7 @@ export default function Checkout() {
   const [coupon, setCoupon] = useState(null);
   const [saving, setSaving] = useState(false);
   const [paymentState, setPaymentState] = useState({ status: 'idle', message: '' });
+  const [selectedPaymentApp, setSelectedPaymentApp] = useState(PAYMENT_APPS[0]);
   const [form, setForm] = useState({
     fullName: userProfile?.name || '',
     phone: userProfile?.phone || '',
@@ -165,11 +187,11 @@ export default function Checkout() {
       const scriptLoaded = await loadRazorpayCheckout();
 
       if (!scriptLoaded) {
-        throw new Error('Unable to load Razorpay checkout right now');
+        throw new Error('Unable to load payment checkout right now');
       }
 
       const orderPayload = buildOrderPayload({
-        paymentMethod: 'Razorpay',
+        paymentMethod: selectedPaymentApp.name,
         paymentStatus: 'Paid',
         status: 'Confirmed',
       });
@@ -252,10 +274,10 @@ export default function Checkout() {
       razorpay.open();
     } catch (error) {
       setSaving(false);
-      toast.error(error.message || 'Unable to start Razorpay checkout.');
+      toast.error(error.message || 'Unable to start payment checkout.');
       setPaymentState({
         status: 'failed',
-        message: error.message || 'Unable to start Razorpay checkout.',
+        message: error.message || 'Unable to start payment checkout.',
       });
     }
   }
@@ -455,34 +477,39 @@ export default function Checkout() {
                 >
                   <h2 className="font-heading text-4xl text-primary">Payment Method</h2>
 
-                  <button
-                    type="button"
-                    className="w-full rounded-[1.6rem] border-2 border-gold bg-amber-50 p-5 text-left transition"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-gold">
-                        <div className="h-2.5 w-2.5 rounded-full bg-gold" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <p className="font-semibold text-primary">Razorpay Secure Checkout</p>
-                          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                            Recommended
-                          </span>
-                        </div>
-                        <p className="mt-2 text-sm text-body">
-                          Pay through UPI, cards, netbanking, and other secure online methods.
-                        </p>
-                        <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-                          <span className="rounded-full bg-cream px-3 py-1">UPI</span>
-                          <span className="rounded-full bg-cream px-3 py-1">Cards</span>
-                          <span className="rounded-full bg-cream px-3 py-1">Netbanking</span>
-                          <span className="rounded-full bg-cream px-3 py-1">Wallets</span>
-                        </div>
-                      </div>
-                      <CreditCard className="text-gold" size={22} />
-                    </div>
-                  </button>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    {PAYMENT_APPS.map((app) => {
+                      const selected = selectedPaymentApp.id === app.id;
+                      return (
+                        <button
+                          key={app.id}
+                          type="button"
+                          className={`rounded-[1.35rem] border-2 bg-white p-4 text-left transition ${
+                            selected
+                              ? 'border-gold shadow-[0_14px_36px_rgba(201,168,76,0.22)]'
+                              : 'border-borderwarm hover:border-gold/70'
+                          }`}
+                          onClick={() => setSelectedPaymentApp(app)}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div
+                              className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-black/5 text-lg font-black shadow-sm ${app.className}`}
+                            >
+                              {app.logo}
+                            </div>
+                            <div
+                              className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
+                                selected ? 'border-gold' : 'border-borderwarm'
+                              }`}
+                            >
+                              {selected ? <div className="h-2.5 w-2.5 rounded-full bg-gold" /> : null}
+                            </div>
+                          </div>
+                          <p className="mt-4 font-semibold text-primary">{app.name}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
 
                   {paymentState.status === 'failed' ? (
                     <div className="rounded-[1.4rem] border border-red-100 bg-red-50 px-4 py-4 text-sm text-red-700">
@@ -551,9 +578,7 @@ export default function Checkout() {
                         Edit
                       </button>
                     </div>
-                    <p className="font-semibold text-primary">
-                      Razorpay Secure Checkout
-                    </p>
+                    <p className="font-semibold text-primary">{selectedPaymentApp.name}</p>
                   </div>
 
                   <div className="space-y-3">
@@ -600,7 +625,7 @@ export default function Checkout() {
                       disabled={saving}
                     >
                       {saving
-                        ? 'Opening Razorpay...'
+                        ? `Opening ${selectedPaymentApp.name}...`
                         : `Pay Securely | ${formatPrice(total)}`}
                     </button>
                   </div>
@@ -692,10 +717,6 @@ export default function Checkout() {
                 WhatsApp support: {siteConfig.phoneDisplay}
               </a>
 
-              <div className="mt-3 flex items-center gap-2 rounded-2xl bg-[#f6efe5] p-3 text-xs text-muted">
-                <Landmark className="h-4 w-4 flex-shrink-0 text-gold-dark" />
-                Razorpay keys can be added later in the environment config without changing this UI.
-              </div>
             </aside>
           </div>
         </div>

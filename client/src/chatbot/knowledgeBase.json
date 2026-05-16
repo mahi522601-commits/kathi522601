@@ -54,10 +54,10 @@
     },
     {
       "name": "payment",
-      "keywords": ["payment", "pay", "razorpay", "upi", "card", "netbanking", "wallet"],
-      "suggestions": ["Razorpay checkout", "UPI payment", "Delivery help", "Talk to support"],
+      "keywords": ["payment", "pay", "phonepe", "google pay", "gpay", "paytm", "upi"],
+      "suggestions": ["PhonePe payment", "Google Pay", "Paytm", "Talk to support"],
       "responses": [
-        "You can complete secure online checkout through Razorpay using UPI, cards, netbanking, or supported wallets."
+        "You can complete secure online checkout using PhonePe, Google Pay, or Paytm."
       ]
     },
     {
