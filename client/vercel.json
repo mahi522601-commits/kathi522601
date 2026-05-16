@@ -1,13 +1,15 @@
 {
-  "headers": [
+  "redirects": [
     {
-      "source": "/sitemap.xml",
-      "headers": [
+      "source": "/(.*)",
+      "has": [
         {
-          "key": "Content-Type",
-          "value": "application/xml"
+          "type": "host",
+          "value": "www.khyathicollections.com"
         }
-      ]
+      ],
+      "destination": "https://khyathicollections.com/$1",
+      "permanent": true
     }
   ]
 }
