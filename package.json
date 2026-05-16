@@ -9,6 +9,7 @@
     "build": "npm --prefix client install && npm --prefix client run build"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "vite-plugin-sitemap": "^0.8.2"
   }
 }
