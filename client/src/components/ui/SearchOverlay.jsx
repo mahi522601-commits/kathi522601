@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { getFeaturedProducts, searchProducts } from '../../firebase/productsService';
 import { formatPrice } from '../../utils/formatPrice';
 import { CloseIcon, SearchIcon } from './Icons';
-import { LoadingSpinner } from './LoadingSpinner';
+import  LoadingSpinner  from './LoadingSpinner';
 
 const popularTags = ['Saree', 'Georgette', 'Half Saree', 'Black', 'Wedding', 'Festive'];
 

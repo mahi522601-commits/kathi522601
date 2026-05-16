@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { LoadingSpinner } from '../ui/LoadingSpinner';
+import LoadingSpinner from '../ui/LoadingSpinner';
 
 export default function AdminRoute({ children }) {
   const { isAdmin, loading } = useAuth();

@@ -10,7 +10,7 @@ import PrivateRoute from './components/layout/PrivateRoute';
 import CartDrawer from './components/ui/CartDrawer';
 import SearchOverlay from './components/ui/SearchOverlay';
 import FloatingSocialBar from './components/ui/FloatingSocialBar';
-import { LoadingSpinner } from './components/ui/LoadingSpinner';
+import LoadingSpinner from './components/ui/LoadingSpinner';
 import ChatbotButton from './components/chatbot/ChatbotButton';
 import ChatbotPanel from './components/chatbot/ChatbotPanel';
 import FestivalBannerOverlay from './components/home/FestivalBannerOverlay';
@@ -43,6 +43,7 @@ const AdminProducts = lazy(() => import('./pages/admin/AdminProducts'));
 const AdminOrders = lazy(() => import('./pages/admin/AdminOrders'));
 const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
 const AdminMessages = lazy(() => import('./pages/admin/AdminMessages'));
+import JewelleryComingSoon from './pages/JewelleryComingSoon';
 
 const ADMIN_PATHS = [
   '/admin',
@@ -74,6 +75,7 @@ export default function App() {
         <Suspense fallback={<LoadingSpinner />}>
           <Routes location={location} key={location.pathname}>
             <Route path="/" element={<Home />} />
+            <Route path="/jewellery" element={<JewelleryComingSoon />} />
             <Route path="/collections" element={<Shop />} />
             <Route path="/collections/:category" element={<Shop />} />
             <Route path="/product/:id" element={<ProductDetail />} />
