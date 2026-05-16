@@ -7,5 +7,7 @@ server/.env
 server/server-dev.log
 server/server-dev.err
 client/.env
+client/client-dev.log
+client/client-dev.err
 .DS_Store
 Thumbs.db
