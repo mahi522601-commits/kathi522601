@@ -1,11 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { VitePluginSitemap } from 'vite-plugin-sitemap';
+import sitemap from 'vite-plugin-sitemap';
 
 export default defineConfig({
   plugins: [
     react(),
-    VitePluginSitemap({
+    sitemap({
       hostname: 'https://khyathicollections.com',
     }),
   ],
@@ -18,20 +18,6 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
-      },
-    },
-  },
-
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          react: ['react', 'react-dom', 'react-router-dom'],
-          firebase: ['firebase/app', 'firebase/auth'],
-          motion: ['framer-motion'],
-          ui: ['lucide-react', 'react-dropzone'],
-          swiper: ['swiper', 'swiper/react', 'swiper/modules'],
-        },
       },
     },
   },
