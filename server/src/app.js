@@ -2,9 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+
 import { env } from './config/environment.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
+
 import productsRouter from './routes/products.js';
 import ordersRouter from './routes/orders.js';
 import usersRouter from './routes/users.js';
@@ -18,17 +20,23 @@ import paymentsRouter from './routes/payments.js';
 const app = express();
 
 app.use(helmet());
+
+/* CORS FIX */
+app.use(cors());
+
+app.options('*', cors());
+
+app.use(morgan('dev'));
+
+app.use(express.json({ limit: '50mb' }));
+
 app.use(
-  cors({
-    origin: true,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+  express.urlencoded({
+    extended: true,
+    limit: '50mb',
   }),
 );
-app.use(morgan('dev'));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
 app.use(rateLimiter);
 
 app.get('/api/health', (req, res) => {
@@ -39,6 +47,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+/* ROUTES */
 app.use('/api/products', productsRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/users', usersRouter);
@@ -49,6 +58,7 @@ app.use('/api/contact', contactRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/payments', paymentsRouter);
 
+/* ERROR HANDLER */
 app.use(errorHandler);
 
 export default app;
