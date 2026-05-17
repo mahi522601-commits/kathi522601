@@ -1,8 +1,12 @@
 import axios from 'axios';
 import { auth } from '../firebase/config';
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  'https://kathi522601.onrender.com/api';
+
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: API_URL,
   timeout: 30000,
 });
 
@@ -11,6 +15,7 @@ axiosInstance.interceptors.request.use(async (config) => {
 
   if (user) {
     const token = await user.getIdToken();
+
     config.headers.Authorization = `Bearer ${token}`;
   }
 
@@ -26,7 +31,10 @@ axiosInstance.interceptors.response.use(
       error.message = apiMessage;
     }
 
-    if (error.response?.status === 401 && window.location.pathname.startsWith('/admin')) {
+    if (
+      error.response?.status === 401 &&
+      window.location.pathname.startsWith('/admin')
+    ) {
       window.location.href = '/login';
     }
 
