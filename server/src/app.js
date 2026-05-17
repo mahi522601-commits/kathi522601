@@ -20,14 +20,10 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: [
-      'https://khyathicollections.com',
-      'https://www.khyathicollections.com',
-      'https://kathi522601-6r9n.vercel.app',
-      'http://localhost:5173',
-    ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    origin: true,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   }),
 );
 app.use(morgan('dev'));
