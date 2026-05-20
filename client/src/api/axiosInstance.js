@@ -10,6 +10,22 @@ const axiosInstance = axios.create({
   timeout: 30000,
 });
 
+function getLocalAdminToken() {
+  const token = import.meta.env.VITE_LOCAL_ADMIN_TOKEN;
+
+  if (!token) {
+    return '';
+  }
+
+  try {
+    const session = JSON.parse(localStorage.getItem('khyathi-local-session') || 'null');
+
+    return session?.role === 'admin' ? token : '';
+  } catch {
+    return '';
+  }
+}
+
 axiosInstance.interceptors.request.use(async (config) => {
   const user = auth?.currentUser;
 
@@ -17,6 +33,12 @@ axiosInstance.interceptors.request.use(async (config) => {
     const token = await user.getIdToken();
 
     config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    const token = getLocalAdminToken();
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
 
   return config;

@@ -6,13 +6,15 @@ import { isAdminEmail } from '../utils/adminEmails.js';
 export async function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization;
   const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  const isLocalAdminToken =
+    env.localAdminToken && bearerToken === env.localAdminToken;
 
-  if (!bearerToken && env.allowDevAuthBypass) {
+  if ((!bearerToken && env.allowDevAuthBypass) || isLocalAdminToken) {
     req.user = {
       uid: 'local-admin',
       email: 'admin@khyathi.com',
       role: 'admin',
-      source: 'dev-bypass',
+      source: isLocalAdminToken ? 'local-admin-token' : 'dev-bypass',
     };
     return next();
   }

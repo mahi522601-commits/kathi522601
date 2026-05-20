@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, Check, CheckCheck, ExternalLink, MessageSquare, Package, ShoppingBag, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import axiosInstance from '../../api/axiosInstance';
 import { getOrders } from '../../firebase/ordersService';
 import { formatPrice } from '../../utils/formatPrice';
 
@@ -71,8 +72,8 @@ export default function AdminNotifications() {
         // Try to load contact messages if endpoint exists
         let messages = [];
         try {
-          const res = await fetch('/api/contact/messages', { headers: { Authorization: `Bearer ${await window._getAdminToken?.()}` } });
-          if (res.ok) { const d = await res.json(); messages = d.messages || []; }
+          const { data } = await axiosInstance.get('/contact/messages');
+          messages = data.messages || [];
         } catch { /* no messages endpoint yet */ }
         setNotifications(buildNotifications(orders, messages));
       } catch { /* silently fail */ }

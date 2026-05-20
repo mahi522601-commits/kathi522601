@@ -67,6 +67,8 @@ export const env = {
 
   hasFirebaseAdminConfig,
 
+  localAdminToken: process.env.LOCAL_ADMIN_TOKEN || '',
+
   useMockStore: !hasFirebaseAdminConfig,
 
   allowDevAuthBypass:
