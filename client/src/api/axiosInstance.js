@@ -1,9 +1,11 @@
 import axios from 'axios';
 import { auth } from '../firebase/config';
 
-const API_URL =
-  import.meta.env.VITE_API_URL ||
-  'https://kathi522601.onrender.com/api';
+const PRODUCTION_API_URL = 'https://kathi522601.onrender.com/api';
+
+const API_URL = import.meta.env.PROD
+  ? PRODUCTION_API_URL
+  : import.meta.env.VITE_API_URL || PRODUCTION_API_URL;
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
