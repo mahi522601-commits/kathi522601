@@ -112,7 +112,7 @@ export default function AdminProducts() {
       <Helmet>
         <title>Admin Products | Khyathi Collections</title>
       </Helmet>
-      <section className="min-h-screen bg-[#120b07] py-8 text-white">
+      <section className="min-h-screen bg-[#0A1F44] py-8 text-white">
         <div className="page-shell grid gap-8 lg:grid-cols-[280px_1fr]">
           <AdminSidebar />
           <div className="space-y-8">

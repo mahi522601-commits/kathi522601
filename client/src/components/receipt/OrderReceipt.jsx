@@ -203,8 +203,11 @@ export default function OrderReceipt({
               </StatusBadge>
               <StatusBadge>{order.paymentMethod || 'Order placed'}</StatusBadge>
             </div>
-            <p className="mt-4 text-sm text-body">Razorpay Payment ID</p>
+            <p className="mt-4 text-sm text-body">Payment Reference</p>
             <p className="break-all text-sm font-semibold text-primary">{paymentId}</p>
+            {order.paymentUpiId ? (
+              <p className="mt-2 text-xs text-muted">UPI: {order.paymentUpiId}</p>
+            ) : null}
             <p className="mt-4 font-heading text-3xl">{formatPrice(order.total)}</p>
           </div>
         </div>

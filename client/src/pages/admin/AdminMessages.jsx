@@ -62,13 +62,13 @@ export default function AdminMessages() {
   return (
     <>
       <Helmet><title>Messages | Admin | Khyathi Collections</title></Helmet>
-      <section className="min-h-screen bg-[#120b07] py-8">
+      <section className="min-h-screen bg-[#0A1F44] py-8">
         <div className="page-shell grid gap-8 lg:grid-cols-[280px_1fr]">
           <AdminSidebar />
           <div className="space-y-6">
-            <div className="flex items-center justify-between rounded-[28px] border border-white/10 bg-gradient-to-br from-[#24140a] to-[#140b06] p-6 text-white">
+            <div className="flex items-center justify-between rounded-[18px] border border-white/10 bg-gradient-to-br from-[#102A5A] to-[#0A1F44] p-6 text-white">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#f6d878]">Customer inbox</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#C8A96B]">Customer inbox</p>
                 <h1 className="mt-3 font-heading text-5xl text-white">Contact Messages</h1>
                 <p className="mt-1 text-sm text-[#d8c6aa]">
                   {unreadCount > 0 ? <span className="text-maroon font-semibold">{unreadCount} unread · </span> : null}

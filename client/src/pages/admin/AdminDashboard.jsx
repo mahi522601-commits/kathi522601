@@ -141,12 +141,12 @@ export default function AdminDashboard() {
       <Helmet>
         <title>Admin Dashboard | Khyathi Collections</title>
       </Helmet>
-      <section className="min-h-screen bg-[#120b07] py-8 text-white">
+      <section className="min-h-screen bg-[#0A1F44] py-8 text-white">
         <div className="page-shell grid gap-8 lg:grid-cols-[280px_1fr]">
           <AdminSidebar />
           <div className="space-y-8">
-            <div className="rounded-[28px] border border-white/10 bg-gradient-to-br from-[#24140a] to-[#140b06] p-6 shadow-[0_28px_90px_rgba(0,0,0,0.24)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#f6d878]">Luxury commerce command</p>
+            <div className="rounded-[18px] border border-white/10 bg-gradient-to-br from-[#102A5A] to-[#0A1F44] p-6 shadow-[0_28px_90px_rgba(0,0,0,0.24)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#C8A96B]">Luxury commerce command</p>
               <h1 className="mt-3 font-heading text-5xl text-white">Dashboard</h1>
               <p className="mt-2 max-w-2xl text-sm text-[#d8c6aa]">
                 Track revenue, orders, categories, reviews, and recent activity from one polished admin view.

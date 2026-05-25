@@ -75,7 +75,7 @@ export default function TrackOrder() {
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Payment Details</p>
                   <div className="mt-4 space-y-2 text-sm text-body">
                     <p>Status: <span className="font-semibold text-primary">{order.paymentStatus || 'Pending'}</span></p>
-                    <p>Method: <span className="font-semibold text-primary">{order.paymentMethod || 'Razorpay'}</span></p>
+                    <p>Method: <span className="font-semibold text-primary">{order.paymentMethod || 'UPI'}</span></p>
                     <p className="break-all">Transaction: <span className="font-semibold text-primary">{order.transactionId || order.paymentId || 'Not available'}</span></p>
                   </div>
                   <div className="mt-6 flex flex-wrap gap-3">

@@ -8,7 +8,7 @@ export default function AdminBanners() {
       <Helmet>
         <title>Admin Banners | Khyathi Collections</title>
       </Helmet>
-      <section className="min-h-screen bg-[#120b07] py-8">
+      <section className="min-h-screen bg-[#0A1F44] py-8">
         <div className="page-shell grid gap-8 lg:grid-cols-[280px_1fr]">
           <AdminSidebar />
           <FestivalBannersManager />

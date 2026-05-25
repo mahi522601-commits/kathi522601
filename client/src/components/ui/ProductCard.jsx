@@ -30,7 +30,7 @@ export default function ProductCard({ product }) {
       >
         <div className="relative overflow-hidden">
           <Link to={`/product/${product.id}`} className="block">
-            <div className="relative h-[280px] bg-cream">
+            <div className="relative h-[240px] bg-cream sm:h-[320px] lg:h-[360px]">
               <img
                 src={primaryImage}
                 alt={product.name}
@@ -82,8 +82,8 @@ export default function ProductCard({ product }) {
           </div>
         </div>
 
-        <div className="space-y-3 p-4">
-          <Link to={`/product/${product.id}`} className="line-clamp-2 text-[15px] font-semibold text-primary">
+        <div className="space-y-3 p-3 sm:p-4">
+          <Link to={`/product/${product.id}`} className="line-clamp-2 text-sm font-semibold text-primary sm:text-[15px]">
             {product.name}
           </Link>
           <div className="flex flex-wrap items-center gap-2">

@@ -29,8 +29,6 @@ export default function HeroSlidesManager({ products = [] }) {
   const [draftImages, setDraftImages] = useState([]);
   const [draftMeta, setDraftMeta] = useState({
     title: '',
-    redirectUrl: '',
-    type: 'homepage',
     active: true,
   });
   const [loading, setLoading] = useState(true);
@@ -132,7 +130,7 @@ export default function HeroSlidesManager({ products = [] }) {
       ...createSlide(product, image, index),
       title: draftMeta.title || product.name,
       redirectUrl: draftMeta.redirectUrl || `/product/${product.id}`,
-      type: draftMeta.type,
+      type: 'homepage',
       active: draftMeta.active,
     }));
     setSiteSettings((current) => ({
@@ -140,7 +138,7 @@ export default function HeroSlidesManager({ products = [] }) {
       heroSlides: [...(current?.heroSlides || []), ...newSlides],
     }));
     setDraftImages([]);
-    setDraftMeta({ title: '', redirectUrl: '', type: 'homepage', active: true });
+    setDraftMeta({ title: '', active: true });
     toast.success(`${newSlides.length} hero slide(s) added`);
   }
 
@@ -194,10 +192,9 @@ export default function HeroSlidesManager({ products = [] }) {
             <Sparkles size={14} />
             Home Hero Slider
           </p>
-          <h2 className="mt-2 font-heading text-4xl text-primary">Upload and link hero banners</h2>
+          <h2 className="mt-2 font-heading text-4xl text-primary">Hero title and HD image</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-            Upload homepage hero, promotional, and festival banners. Each banner can be linked,
-            enabled, disabled, reordered, and previewed before going live.
+            Keep the hero clean: one title, one high-quality image, and an automatic Shop Now link to the selected product.
           </p>
         </div>
         <button
@@ -230,29 +227,14 @@ export default function HeroSlidesManager({ products = [] }) {
                 ))}
               </select>
             </label>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div>
               <input
                 className="input-shell"
                 placeholder="Banner title"
                 value={draftMeta.title}
                 onChange={(event) => setDraftMeta({ ...draftMeta, title: event.target.value })}
               />
-              <select
-                className="input-shell"
-                value={draftMeta.type}
-                onChange={(event) => setDraftMeta({ ...draftMeta, type: event.target.value })}
-              >
-                <option value="homepage">Homepage hero</option>
-                <option value="promotion">Promotional banner</option>
-                <option value="festival">Festival banner</option>
-              </select>
             </div>
-            <input
-              className="input-shell"
-              placeholder="Redirect URL, for example /collections/sarees"
-              value={draftMeta.redirectUrl}
-              onChange={(event) => setDraftMeta({ ...draftMeta, redirectUrl: event.target.value })}
-            />
             <label className="inline-flex items-center gap-3 rounded-full border border-borderwarm bg-white px-4 py-3 text-sm font-semibold text-primary">
               <input
                 type="checkbox"
@@ -335,21 +317,6 @@ export default function HeroSlidesManager({ products = [] }) {
                           onChange={(event) => updateSlide(index, { title: event.target.value })}
                           placeholder="Banner title"
                         />
-                        <input
-                          className="input-shell min-w-[220px] flex-1 py-2 text-sm"
-                          value={slide.redirectUrl || ''}
-                          onChange={(event) => updateSlide(index, { redirectUrl: event.target.value })}
-                          placeholder="Redirect URL"
-                        />
-                        <select
-                          className="rounded-full border border-borderwarm bg-white px-4 py-2 text-sm text-primary"
-                          value={slide.type || 'homepage'}
-                          onChange={(event) => updateSlide(index, { type: event.target.value })}
-                        >
-                          <option value="homepage">Hero</option>
-                          <option value="promotion">Promo</option>
-                          <option value="festival">Festival</option>
-                        </select>
                         <button
                           type="button"
                           className={`rounded-full px-4 py-2 text-sm font-semibold ${
@@ -409,7 +376,7 @@ export default function HeroSlidesManager({ products = [] }) {
             </div>
           ) : (
             <div className="mt-5 rounded-[1.5rem] border border-dashed border-borderwarm bg-cream px-5 py-10 text-center text-muted">
-              Upload hero images on the left, link them to products, and they will appear here.
+              Upload HD hero images on the left. Each slide will show only the title and image on the homepage.
             </div>
           )}
         </div>

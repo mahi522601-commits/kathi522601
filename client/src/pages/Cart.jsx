@@ -13,15 +13,20 @@ export default function Cart() {
   const { items, subtotal, updateQuantity, removeFromCart } = useCart();
   const [couponCode, setCouponCode] = useState('');
   const [coupon, setCoupon] = useState(null);
+  const [couponPulse, setCouponPulse] = useState(false);
   const total = subtotal - (coupon?.discountAmount || 0);
 
   async function applyCoupon() {
     try {
-      const response = await validateCoupon(couponCode, subtotal);
+      const response = await validateCoupon(couponCode.trim().toUpperCase(), subtotal);
       setCoupon(response);
-      toast.success(`Coupon applied! ${response.discount}% off`);
+      setCouponCode(response.code || couponCode.trim().toUpperCase());
+      setCouponPulse(true);
+      window.setTimeout(() => setCouponPulse(false), 1800);
+      toast.success(`Coupon applied. You saved ${formatPrice(response.discountAmount)}.`);
     } catch (error) {
       setCoupon(null);
+      setCouponPulse(false);
       toast.error(error.message || 'Invalid coupon code');
     }
   }
@@ -69,13 +74,13 @@ export default function Cart() {
                 ))}
               </div>
 
-              <aside className="card-surface h-fit p-6">
+              <aside className={`card-surface h-fit p-6 transition ${couponPulse ? 'coupon-celebration' : ''}`}>
                 <h2 className="font-heading text-3xl text-primary">Order Summary</h2>
                 <div className="mt-6 flex gap-3">
                   <input
                     type="text"
                     value={couponCode}
-                    onChange={(event) => setCouponCode(event.target.value)}
+                    onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
                     className="input-shell"
                     placeholder="Coupon code"
                   />

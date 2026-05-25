@@ -22,6 +22,7 @@ export default function CartDrawer({ open, onClose }) {
   const [couponOpen, setCouponOpen] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [couponResult, setCouponResult] = useState(null);
+  const [couponPulse, setCouponPulse] = useState(false);
   const [popularProducts, setPopularProducts] = useState([]);
 
   useEffect(() => {
@@ -34,11 +35,15 @@ export default function CartDrawer({ open, onClose }) {
 
   async function applyCoupon() {
     try {
-      const coupon = await validateCoupon(couponCode, subtotal);
+      const coupon = await validateCoupon(couponCode.trim().toUpperCase(), subtotal);
       setCouponResult(coupon);
-      toast.success(`Coupon applied! ${coupon.discount}% off`);
+      setCouponCode(coupon.code || couponCode.trim().toUpperCase());
+      setCouponPulse(true);
+      window.setTimeout(() => setCouponPulse(false), 1800);
+      toast.success(`Coupon applied. You saved ${formatPrice(coupon.discountAmount)}.`);
     } catch (error) {
       setCouponResult(null);
+      setCouponPulse(false);
       toast.error(error.message || 'Invalid coupon code');
     }
   }
@@ -121,7 +126,7 @@ export default function CartDrawer({ open, onClose }) {
               )}
 
               <div className="mt-6 space-y-4">
-                <div className="rounded-[1.4rem] border border-borderwarm bg-white">
+                <div className={`rounded-[1.4rem] border border-borderwarm bg-white transition ${couponPulse ? 'coupon-celebration' : ''}`}>
                   <button
                     type="button"
                     className="flex w-full items-center justify-between px-5 py-4 text-left text-sm font-semibold text-primary"
@@ -152,7 +157,7 @@ export default function CartDrawer({ open, onClose }) {
                         <input
                           type="text"
                           value={couponCode}
-                          onChange={(event) => setCouponCode(event.target.value)}
+                          onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
                           className="input-shell"
                           placeholder="Enter coupon"
                         />

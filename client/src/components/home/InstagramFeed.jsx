@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import { MessageCircle, Sparkles } from 'lucide-react';
-import { instagramPosts } from '../../firebase/seedData';
 import { InstagramIcon } from '../ui/Icons';
 import { siteConfig } from '../../config/site';
 
@@ -40,10 +39,10 @@ export default function InstagramFeed() {
           </motion.a>
         </motion.div>
 
-        <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4">
-          {instagramPosts.map((post, index) => (
+        <div className="mt-10 grid gap-4 md:grid-cols-4">
+          {['New saree drops', 'Jewellery styling', 'Customer highlights', 'Surprise offers'].map((label, index) => (
             <motion.a
-              key={post.id}
+              key={label}
               href={siteConfig.instagramUrl}
               target="_blank"
               rel="noreferrer"
@@ -51,19 +50,13 @@ export default function InstagramFeed() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.05 }}
-              className="group relative overflow-hidden rounded-[18px] border border-white/15 bg-white/10 shadow-[0_18px_45px_rgba(0,0,0,0.24)]"
+              className="rounded-[16px] border border-white/15 bg-white/10 p-5 text-left shadow-[0_18px_45px_rgba(0,0,0,0.18)] transition hover:border-[#C8A96B] hover:bg-white/15"
             >
-              <img
-                src={post.image}
-                alt=""
-                className="aspect-square w-full object-cover transition duration-500 group-hover:scale-105"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 via-black/10 to-transparent p-4">
-                <div className="rounded-full border border-white/20 bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-xl">
-                  Social proof
-                </div>
-              </div>
+              <InstagramIcon className="h-5 w-5 text-[#C8A96B]" />
+              <p className="mt-8 text-sm font-semibold uppercase tracking-[0.18em]">{label}</p>
+              <p className="mt-2 text-sm leading-6 text-white/65">
+                Follow for curated updates without extra image clutter on the homepage.
+              </p>
             </motion.a>
           ))}
         </div>

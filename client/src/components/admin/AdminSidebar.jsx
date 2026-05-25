@@ -14,13 +14,13 @@ const adminLinks = [
 
 export default function AdminSidebar() {
   return (
-    <aside className="sticky top-8 h-fit rounded-[24px] border border-[#6f5428]/40 bg-[#1c120a] p-5 text-white shadow-[0_24px_70px_rgba(28,18,10,0.24)]">
+    <aside className="sticky top-8 h-fit rounded-[18px] border border-white/10 bg-[#081832] p-5 text-white shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <BrandLogo size="sm" className="h-12 w-12" />
           <div>
             <p className="font-heading text-2xl">Admin Panel</p>
-            <p className="text-xs uppercase tracking-[0.16em] text-[#dcc8af]">Khyathi Collections</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-[#E5D3B3]">Khyathi Collections</p>
           </div>
         </div>
         {/* Notifications bell — renders with its own state */}
@@ -38,8 +38,8 @@ export default function AdminSidebar() {
             className={({ isActive }) =>
               `rounded-[14px] px-4 py-3 text-sm font-semibold transition flex items-center gap-3 ${
                 isActive
-                  ? 'bg-[#f6d878] text-[#1c120a] shadow-[0_14px_34px_rgba(201,168,76,0.22)]'
-                  : 'bg-white/10 text-[#f4eadc] hover:bg-white/20'
+                  ? 'bg-[#C8A96B] text-[#0A1F44] shadow-[0_14px_34px_rgba(200,169,107,0.22)]'
+                  : 'bg-white/10 text-[#F8F8F8] hover:bg-white/20'
               }`
             }
           >

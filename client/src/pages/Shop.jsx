@@ -221,7 +221,7 @@ export default function Shop() {
             <div className={`${mobileFiltersOpen ? 'block' : 'hidden'} lg:block`}>{sidebar}</div>
 
             <div>
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-2 gap-4 xl:grid-cols-4 xl:gap-6">
                 {loading
                   ? Array.from({ length: 6 }).map((_, index) => <ProductSkeleton key={index} />)
                   : visibleProducts.map((product) => <ProductCard key={product.id} product={product} />)}

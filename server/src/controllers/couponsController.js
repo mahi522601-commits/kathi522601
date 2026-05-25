@@ -1,9 +1,16 @@
 import { createDocument, deleteDocument, getDocument, listDocuments, updateDocument } from '../services/firestore.js';
+import { seedData } from '../data/seedData.js';
+
+function findSeedCoupon(code) {
+  return seedData.coupons.find((coupon) => coupon.code === code || coupon.id === code) || null;
+}
 
 export async function getCoupons(req, res, next) {
   try {
     const coupons = await listDocuments('coupons');
-    res.json({ success: true, coupons });
+    const merged = new Map(seedData.coupons.map((coupon) => [coupon.code, coupon]));
+    coupons.forEach((coupon) => merged.set(coupon.code || coupon.id, coupon));
+    res.json({ success: true, coupons: [...merged.values()] });
   } catch (error) {
     next(error);
   }
@@ -13,7 +20,7 @@ export async function validateCoupon(req, res, next) {
   try {
     const code = (req.body.code || '').toUpperCase().trim();
     const subtotal = Number(req.body.subtotal || 0);
-    const coupon = await getDocument('coupons', code);
+    const coupon = (await getDocument('coupons', code)) || findSeedCoupon(code);
 
     if (!coupon || !coupon.active) {
       return res.status(404).json({ success: false, error: 'Invalid coupon code' });

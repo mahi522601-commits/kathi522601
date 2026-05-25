@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Download, X } from 'lucide-react';
+import { CheckCircle, Download, ExternalLink, X } from 'lucide-react';
 import OrderReceipt from '../receipt/OrderReceipt';
 import { formatPrice } from '../../utils/formatPrice';
 
@@ -67,7 +67,7 @@ function exportOrdersCsv(orders) {
   URL.revokeObjectURL(url);
 }
 
-export default function OrdersTable({ orders, loading = false, savingOrderId = '', onSaveStatus }) {
+export default function OrdersTable({ orders, loading = false, savingOrderId = '', onSaveStatus, onSaveOrder }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [receiptOrder, setReceiptOrder] = useState(null);
   const [search, setSearch] = useState('');
@@ -257,6 +257,46 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                 <p>
                   {selectedOrder.address?.city}, {selectedOrder.address?.state} - {selectedOrder.address?.pincode}
                 </p>
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Payment Proof</p>
+              <div className="mt-3 rounded-[1.2rem] bg-cream p-4">
+                {selectedOrder.paymentProof?.dataUrl ? (
+                  <>
+                    <img src={selectedOrder.paymentProof.dataUrl} alt="Payment screenshot" className="max-h-80 rounded-[14px] border border-borderwarm object-contain" />
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <a href={selectedOrder.paymentProof.dataUrl} target="_blank" rel="noreferrer" className="action-button-outline gap-2 px-4 py-2 text-xs">
+                        <ExternalLink size={14} />
+                        Open Screenshot
+                      </a>
+                      <button
+                        type="button"
+                        className="action-button gap-2 px-4 py-2 text-xs"
+                        onClick={() => {
+                          onSaveOrder?.(selectedOrder.id, {
+                            paymentStatus: 'Paid',
+                            status: 'Confirmed',
+                            deliveryStatus: 'Confirmed',
+                            paymentVerifiedAt: new Date().toISOString(),
+                          });
+                          setSelectedOrder((current) => ({
+                            ...current,
+                            paymentStatus: 'Paid',
+                            status: 'Confirmed',
+                            deliveryStatus: 'Confirmed',
+                          }));
+                        }}
+                        disabled={savingOrderId === selectedOrder.id || selectedOrder.paymentStatus === 'Paid'}
+                      >
+                        <CheckCircle size={14} />
+                        Confirm Payment
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted">No payment screenshot uploaded.</p>
+                )}
               </div>
             </div>
           </div>

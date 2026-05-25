@@ -50,13 +50,13 @@ export default function AdminCoupons() {
       <Helmet>
         <title>Admin Coupons | Khyathi Collections</title>
       </Helmet>
-      <section className="min-h-screen bg-[#120b07] py-8">
+      <section className="min-h-screen bg-[#0A1F44] py-8">
         <div className="page-shell grid gap-8 lg:grid-cols-[280px_1fr]">
           <AdminSidebar />
           <div className="space-y-8">
-            <div className="flex flex-col gap-4 rounded-[28px] border border-white/10 bg-gradient-to-br from-[#24140a] to-[#140b06] p-6 text-white md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-4 rounded-[18px] border border-white/10 bg-gradient-to-br from-[#102A5A] to-[#0A1F44] p-6 text-white md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#f6d878]">Promotion desk</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#C8A96B]">Promotion desk</p>
                 <h1 className="mt-3 font-heading text-5xl text-white">Coupons</h1>
                 <p className="mt-2 text-sm text-[#d8c6aa]">Create discount codes and manage promotions.</p>
               </div>
