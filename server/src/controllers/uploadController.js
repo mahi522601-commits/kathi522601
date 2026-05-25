@@ -1,13 +1,37 @@
 import { deleteFromImgBB, uploadMultipleToImgBB, uploadToImgBB } from '../services/imgbb.js';
 
+function assertImageData(base64) {
+  if (!base64) {
+    const error = new Error('No image data provided');
+    error.status = 400;
+    throw error;
+  }
+
+  if (!/^data:image\/(jpeg|jpg|png|webp);base64,/i.test(base64)) {
+    const error = new Error('Only JPG, PNG, or WebP images are allowed');
+    error.status = 400;
+    throw error;
+  }
+}
+
 export async function uploadImage(req, res, next) {
   try {
     const { base64, name } = req.body;
-    if (!base64) {
-      return res.status(400).json({ success: false, error: 'No image data provided' });
-    }
+    assertImageData(base64);
 
     const image = await uploadToImgBB(base64, name);
+    res.json({ success: true, image });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function uploadPaymentProof(req, res, next) {
+  try {
+    const { base64, name } = req.body;
+    assertImageData(base64);
+
+    const image = await uploadToImgBB(base64, name || `payment-proof-${Date.now()}`);
     res.json({ success: true, image });
   } catch (error) {
     next(error);

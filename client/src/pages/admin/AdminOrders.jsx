@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import OrdersTable from '../../components/admin/OrdersTable';
-import { getOrders, updateOrder, updateOrderStatus } from '../../firebase/ordersService';
+import { deleteOrder, getOrders, updateOrder, updateOrderStatus } from '../../firebase/ordersService';
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
@@ -47,6 +47,23 @@ export default function AdminOrders() {
     }
   }
 
+  async function removeOrder(orderId) {
+    if (!window.confirm('Delete this order permanently?')) {
+      return;
+    }
+
+    setSavingOrderId(orderId);
+    try {
+      await deleteOrder(orderId);
+      setOrders((current) => current.filter((order) => order.id !== orderId));
+      toast.success('Order deleted');
+    } catch (error) {
+      toast.error(error.message || 'Unable to delete order');
+    } finally {
+      setSavingOrderId('');
+    }
+  }
+
   return (
     <>
       <Helmet>
@@ -61,7 +78,7 @@ export default function AdminOrders() {
               <h1 className="mt-3 font-heading text-5xl text-white">Orders</h1>
               <p className="mt-2 text-sm text-[#d8c6aa]">Monitor, search, receipt-check, and update delivery statuses.</p>
             </div>
-            <OrdersTable orders={orders} loading={loading} savingOrderId={savingOrderId} onSaveStatus={saveStatus} onSaveOrder={saveOrderPatch} />
+            <OrdersTable orders={orders} loading={loading} savingOrderId={savingOrderId} onSaveStatus={saveStatus} onSaveOrder={saveOrderPatch} onDeleteOrder={removeOrder} />
           </div>
         </div>
       </section>

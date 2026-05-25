@@ -8,7 +8,9 @@ import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../hooks/useCart';
 import { incrementCouponUsage, validateCoupon } from '../firebase/couponService';
 import { placeOrder } from '../firebase/ordersService';
+import uploadApi from '../api/uploadApi';
 import { formatPrice } from '../utils/formatPrice';
+import { formatDeliveryDate } from '../utils/deliveryTracking';
 import { indianStates } from '../utils/indianCities';
 import { siteConfig } from '../config/site';
 
@@ -34,6 +36,8 @@ export default function Checkout() {
   const [coupon, setCoupon] = useState(null);
   const [couponPulse, setCouponPulse] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [proofUploading, setProofUploading] = useState(false);
+  const [proofPreviewUrl, setProofPreviewUrl] = useState('');
   const [paymentApp, setPaymentApp] = useState(PAYMENT_APPS[0]);
   const [paymentProof, setPaymentProof] = useState(null);
   const [form, setForm] = useState({
@@ -57,7 +61,17 @@ export default function Checkout() {
     }));
   }, [userProfile]);
 
+  useEffect(() => {
+    return () => {
+      if (proofPreviewUrl) URL.revokeObjectURL(proofPreviewUrl);
+    };
+  }, [proofPreviewUrl]);
+
   const total = useMemo(() => Math.max(subtotal - (coupon?.discountAmount || 0), 0), [coupon, subtotal]);
+  const expectedDeliveryDate = useMemo(
+    () => formatDeliveryDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)),
+    [],
+  );
   const upiUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent('Khyathi Collections')}&am=${total}&cu=INR&tn=${encodeURIComponent('Khyathi order payment')}`;
 
   async function applyCoupon() {
@@ -99,15 +113,37 @@ export default function Checkout() {
       toast.error('Upload a payment screenshot image');
       return;
     }
-    const dataUrl = await fileToDataUrl(file);
-    setPaymentProof({
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      dataUrl,
-      uploadedAt: new Date().toISOString(),
+
+    setProofUploading(true);
+    const previewUrl = URL.createObjectURL(file);
+    setProofPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return previewUrl;
     });
-    toast.success('Payment screenshot added');
+
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const image = await uploadApi.uploadPaymentProof(dataUrl, `payment-proof-${Date.now()}`);
+      setPaymentProof({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        url: image.displayUrl || image.url,
+        thumbnail: image.thumbnail || image.displayUrl || image.url,
+        id: image.id,
+        uploadedAt: new Date().toISOString(),
+      });
+      toast.success('Payment screenshot uploaded');
+    } catch (error) {
+      setPaymentProof(null);
+      setProofPreviewUrl((current) => {
+        if (current) URL.revokeObjectURL(current);
+        return '';
+      });
+      toast.error(error.message || 'Unable to upload payment screenshot');
+    } finally {
+      setProofUploading(false);
+    }
   }
 
   async function submitOrder() {
@@ -151,7 +187,6 @@ export default function Checkout() {
           addresses: [{ line1: form.line1, line2: form.line2, city: form.city, state: form.state, pincode: form.pincode }],
         }).catch(() => {});
       }
-      localStorage.setItem('khyathi-last-order', JSON.stringify(order));
       clearCart();
       navigate(userProfile?.uid ? `/receipt/${order.id}` : '/order-confirmation', { state: { order }, replace: true });
     } catch (error) {
@@ -223,6 +258,9 @@ export default function Checkout() {
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#C8A96B]">Pay to UPI ID</p>
                     <p className="mt-2 text-2xl font-bold">{UPI_ID}</p>
                     <p className="mt-4 text-sm text-white/70">Amount: <span className="font-bold text-white">{formatPrice(total)}</span></p>
+                    <p className="mt-2 text-sm text-white/70">
+                      Delivery: <span className="font-bold text-white">within 5 days, expected by {expectedDeliveryDate}</span>
+                    </p>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-3">
                     {PAYMENT_APPS.map((app) => (
@@ -246,10 +284,10 @@ export default function Checkout() {
                     <span className="mt-1 text-sm text-muted">Admin will verify and confirm your order.</span>
                     <input type="file" accept="image/*" className="hidden" onChange={handleProofUpload} />
                   </label>
-                  {paymentProof ? <img src={paymentProof.dataUrl} alt="Payment screenshot preview" className="max-h-80 rounded-[16px] border border-borderwarm object-contain" /> : null}
+                  {proofPreviewUrl || paymentProof?.thumbnail ? <img src={proofPreviewUrl || paymentProof.thumbnail} alt="Payment screenshot preview" className="max-h-80 rounded-[16px] border border-borderwarm object-contain" /> : null}
                   <div className="flex gap-3">
                     <button className="action-button-outline flex-1" onClick={() => setStep(1)}>Back</button>
-                    <button className="action-button flex-1" disabled={saving} onClick={submitOrder}>{saving ? 'Submitting...' : 'Confirm Order'}</button>
+                    <button className="action-button flex-1" disabled={saving || proofUploading} onClick={submitOrder}>{proofUploading ? 'Uploading...' : saving ? 'Submitting...' : 'Confirm Order'}</button>
                   </div>
                 </motion.div>
               )}

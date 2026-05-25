@@ -1,4 +1,4 @@
-import { getDocument, listDocuments, updateDocument } from '../services/firestore.js';
+import { deleteDocument, getDocument, listDocuments, updateDocument } from '../services/firestore.js';
 import { createStoredOrder } from '../services/orderRecords.js';
 
 export async function getOrders(req, res, next) {
@@ -77,6 +77,15 @@ export async function updateOrder(req, res, next) {
       return res.status(404).json({ success: false, error: 'Order not found' });
     }
     res.json({ success: true, order });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteOrder(req, res, next) {
+  try {
+    await deleteDocument('orders', req.params.id);
+    res.json({ success: true });
   } catch (error) {
     next(error);
   }

@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
-import { CheckCircle, Download, ExternalLink, X } from 'lucide-react';
+import { CheckCircle, Download, ExternalLink, MessageCircle, Trash2, X, XCircle } from 'lucide-react';
 import OrderReceipt from '../receipt/OrderReceipt';
 import { formatPrice } from '../../utils/formatPrice';
+import { formatDeliveryDate, getExpectedDeliveryDate } from '../../utils/deliveryTracking';
 
-const statusOptions = ['Confirmed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered'];
+const statusOptions = ['Confirmed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered', 'Rejected'];
+const paymentStatusOptions = ['Verification Pending', 'Paid', 'Rejected', 'Refunded'];
 
 function PaymentBadge({ status }) {
   const paid = status === 'Paid';
@@ -67,7 +69,22 @@ function exportOrdersCsv(orders) {
   URL.revokeObjectURL(url);
 }
 
-export default function OrdersTable({ orders, loading = false, savingOrderId = '', onSaveStatus, onSaveOrder }) {
+function getPaymentProofUrl(paymentProof) {
+  return paymentProof?.url || paymentProof?.displayUrl || paymentProof?.dataUrl || paymentProof?.thumbnail || '';
+}
+
+function getWhatsAppLink(order, type = 'confirmed') {
+  const phone = String(order.phone || '').replace(/\D/g, '').replace(/^91/, '');
+  const expectedDate = formatDeliveryDate(getExpectedDeliveryDate(order));
+  const text =
+    type === 'rejected'
+      ? `Hello ${order.customerName}, your Khyathi Collections order ${order.orderNumber} payment could not be verified. Please contact us with the correct payment screenshot.`
+      : `Hello ${order.customerName}, your Khyathi Collections order ${order.orderNumber} is confirmed. Delivery will be within 5 days, expected by ${expectedDate}. Total: ${formatPrice(order.total)}.`;
+
+  return `https://wa.me/91${phone}?text=${encodeURIComponent(text)}`;
+}
+
+export default function OrdersTable({ orders, loading = false, savingOrderId = '', onSaveStatus, onSaveOrder, onDeleteOrder }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [receiptOrder, setReceiptOrder] = useState(null);
   const [search, setSearch] = useState('');
@@ -200,7 +217,20 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                 </span>
               </div>
             </div>
-            <div className="flex gap-3">
+              <div className="flex gap-3">
+              <select
+                className="rounded-full border border-borderwarm bg-white px-4 py-3 text-sm outline-none"
+                value={selectedOrder.paymentStatus || 'Verification Pending'}
+                onChange={(event) =>
+                  setSelectedOrder((current) => ({ ...current, paymentStatus: event.target.value }))
+                }
+              >
+                {paymentStatusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
               <select
                 className="rounded-full border border-borderwarm bg-white px-4 py-3 text-sm outline-none"
                 value={selectedOrder.status}
@@ -224,12 +254,92 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
               <button
                 type="button"
                 className="action-button"
-                onClick={() => onSaveStatus(selectedOrder.id, selectedOrder.status)}
+                onClick={() =>
+                  onSaveOrder?.(selectedOrder.id, {
+                    status: selectedOrder.status,
+                    deliveryStatus: selectedOrder.status,
+                    paymentStatus: selectedOrder.paymentStatus,
+                  })
+                }
                 disabled={savingOrderId === selectedOrder.id}
               >
-                {savingOrderId === selectedOrder.id ? 'Saving...' : 'Save Status'}
+                {savingOrderId === selectedOrder.id ? 'Saving...' : 'Save Order Changes'}
               </button>
             </div>
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-3 rounded-[1.2rem] border border-borderwarm bg-cream p-4">
+            <button
+              type="button"
+              className="action-button gap-2"
+              onClick={() => {
+                onSaveOrder?.(selectedOrder.id, {
+                  paymentStatus: 'Paid',
+                  status: 'Confirmed',
+                  deliveryStatus: 'Confirmed',
+                  paymentVerifiedAt: new Date().toISOString(),
+                });
+                setSelectedOrder((current) => ({
+                  ...current,
+                  paymentStatus: 'Paid',
+                  status: 'Confirmed',
+                  deliveryStatus: 'Confirmed',
+                }));
+              }}
+              disabled={savingOrderId === selectedOrder.id}
+            >
+              <CheckCircle size={15} />
+              Confirm Order
+            </button>
+            <a
+              className="action-button-outline gap-2"
+              href={getWhatsAppLink(selectedOrder, 'confirmed')}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <MessageCircle size={15} />
+              WhatsApp Confirm Message
+            </a>
+            <button
+              type="button"
+              className="rounded-full border border-red-200 bg-red-50 px-5 py-3 text-sm font-semibold text-red-700"
+              onClick={() => {
+                onSaveOrder?.(selectedOrder.id, {
+                  paymentStatus: 'Rejected',
+                  status: 'Rejected',
+                  deliveryStatus: 'Rejected',
+                  rejectedAt: new Date().toISOString(),
+                });
+                setSelectedOrder((current) => ({
+                  ...current,
+                  paymentStatus: 'Rejected',
+                  status: 'Rejected',
+                  deliveryStatus: 'Rejected',
+                }));
+              }}
+              disabled={savingOrderId === selectedOrder.id}
+            >
+              <XCircle size={15} className="mr-2 inline" />
+              Reject Order
+            </button>
+            <a
+              className="rounded-full border border-red-200 bg-white px-5 py-3 text-sm font-semibold text-red-700"
+              href={getWhatsAppLink(selectedOrder, 'rejected')}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <MessageCircle size={15} className="mr-2 inline" />
+              WhatsApp Reject Message
+            </a>
+            <button
+              type="button"
+              className="ml-auto inline-flex items-center gap-2 rounded-full border border-red-200 bg-white px-5 py-3 text-sm font-semibold text-red-700"
+              onClick={() => onDeleteOrder?.(selectedOrder.id)}
+              disabled={savingOrderId === selectedOrder.id}
+            >
+              <Trash2 size={15} />
+              Delete Order
+            </button>
           </div>
 
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -262,11 +372,11 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Payment Proof</p>
               <div className="mt-3 rounded-[1.2rem] bg-cream p-4">
-                {selectedOrder.paymentProof?.dataUrl ? (
+                {getPaymentProofUrl(selectedOrder.paymentProof) ? (
                   <>
-                    <img src={selectedOrder.paymentProof.dataUrl} alt="Payment screenshot" className="max-h-80 rounded-[14px] border border-borderwarm object-contain" />
+                    <img src={getPaymentProofUrl(selectedOrder.paymentProof)} alt="Payment screenshot" className="max-h-80 rounded-[14px] border border-borderwarm object-contain" />
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <a href={selectedOrder.paymentProof.dataUrl} target="_blank" rel="noreferrer" className="action-button-outline gap-2 px-4 py-2 text-xs">
+                      <a href={getPaymentProofUrl(selectedOrder.paymentProof)} target="_blank" rel="noreferrer" className="action-button-outline gap-2 px-4 py-2 text-xs">
                         <ExternalLink size={14} />
                         Open Screenshot
                       </a>
@@ -290,7 +400,7 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                         disabled={savingOrderId === selectedOrder.id || selectedOrder.paymentStatus === 'Paid'}
                       >
                         <CheckCircle size={14} />
-                        Confirm Payment
+                        Confirm Payment and Order
                       </button>
                     </div>
                   </>

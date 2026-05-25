@@ -63,13 +63,16 @@ export async function createCoupon(req, res, next) {
 
 export async function updateCoupon(req, res, next) {
   try {
-    const coupon = await updateDocument('coupons', req.params.code.toUpperCase(), {
+    const code = req.params.code.toUpperCase();
+    const payload = {
       ...req.body,
-      code: req.params.code.toUpperCase(),
-    });
+      code,
+      active: req.body.active ?? true,
+    };
+    let coupon = await updateDocument('coupons', code, payload);
 
     if (!coupon) {
-      return res.status(404).json({ success: false, error: 'Coupon not found' });
+      coupon = await createDocument('coupons', payload, code);
     }
 
     res.json({ success: true, coupon });

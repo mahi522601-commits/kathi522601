@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   createOrder,
+  deleteOrder,
   getOrder,
   getOrders,
   updateOrder,
@@ -14,5 +15,6 @@ router.get('/', verifyToken, getOrders);
 router.get('/:id', verifyToken, getOrder);
 router.post('/', createOrder);
 router.put('/:id', verifyToken, adminOnly, updateOrder);
+router.delete('/:id', verifyToken, adminOnly, deleteOrder);
 
 export default router;

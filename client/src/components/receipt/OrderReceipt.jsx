@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Download, MessageCircle, Printer, Share2, ShoppingBag, Truck } from 'lucide-react';
+import { CalendarDays, Download, MessageCircle, Printer, ReceiptText, Share2, ShoppingBag, Truck } from 'lucide-react';
 import BrandLogo from '../ui/BrandLogo';
 import DeliveryTracker from '../orders/DeliveryTracker';
 import { siteConfig } from '../../config/site';
@@ -110,8 +110,9 @@ export default function OrderReceipt({
             Your order has been confirmed
           </p>
           <h1 className="mt-3 font-heading text-4xl text-primary md:text-5xl">
-            Expected delivery within 5 days
+            Delivery within 5 days
           </h1>
+          <p className="mt-2 text-sm font-semibold text-body">Expected by {expectedDate}</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <button type="button" className="action-button" onClick={onContinueShopping}>
               Continue Shopping
@@ -160,60 +161,69 @@ export default function OrderReceipt({
 
       <article
         ref={receiptRef}
-        className={`receipt-sheet overflow-hidden rounded-[24px] border border-[#e7d7b5] bg-[#fffaf0] text-primary shadow-[0_24px_80px_rgba(42,29,16,0.12)] ${compact ? 'text-sm' : ''}`}
+        className={`receipt-sheet overflow-hidden rounded-[22px] border border-[#d8c090] bg-white text-primary shadow-[0_24px_80px_rgba(42,29,16,0.12)] ${compact ? 'text-sm' : ''}`}
       >
-        <header className="border-b border-[#e8d8b4] bg-[#1c120a] px-5 py-6 text-[#fffaf0] md:px-8">
+        <header className="border-b border-[#d8c090] bg-[#0A1F44] px-5 py-5 text-white md:px-7">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
-              <BrandLogo size="lg" className="rounded-full bg-[#fffaf0] p-1" />
+              <BrandLogo size="lg" className="rounded-full bg-white p-1" />
               <div>
-                <p className="font-heading text-3xl">Khyathi Collections</p>
-                <p className="mt-1 text-xs uppercase tracking-[0.22em] text-[#e8c97a]">
-                  Luxury Digital Receipt
+                <p className="font-heading text-3xl leading-none">Khyathi Collections</p>
+                <p className="mt-1 text-xs uppercase tracking-[0.22em] text-[#C8A96B]">
+                  One Page Digital Receipt
                 </p>
               </div>
             </div>
-            <div className="text-left text-sm leading-7 md:text-right">
-              <p>{siteConfig.location}</p>
+            <div className="grid gap-2 text-left text-sm md:text-right">
+              <p className="font-semibold">{siteConfig.location}</p>
               <p>Phone: {siteConfig.phoneDisplay}</p>
               <p>Receipt: {receiptNumber}</p>
             </div>
           </div>
         </header>
 
-        <div className="grid gap-5 px-5 py-6 md:grid-cols-3 md:px-8">
-          <div className="rounded-[16px] border border-[#ead7a2] bg-white p-4">
+        <div className="grid gap-3 border-b border-[#ead7a2] bg-[#fff8e8] px-5 py-4 md:grid-cols-4 md:px-7">
+          <div className="rounded-[14px] border border-[#ead7a2] bg-white p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Customer</p>
-            <p className="mt-3 font-semibold">{order.customerName}</p>
+            <p className="mt-2 font-semibold">{order.customerName}</p>
             <p className="mt-1 text-sm text-body">{order.phone}</p>
-            <p className="mt-1 text-sm leading-6 text-body">{getAddress(order.address)}</p>
+            <p className="mt-1 line-clamp-3 text-sm leading-6 text-body">{getAddress(order.address)}</p>
           </div>
-          <div className="rounded-[16px] border border-[#ead7a2] bg-white p-4">
+          <div className="rounded-[14px] border border-[#ead7a2] bg-white p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Order</p>
-            <p className="mt-3 text-sm text-body">Order ID: <span className="font-semibold text-primary">{order.orderNumber}</span></p>
-            <p className="mt-1 text-sm text-body">Payment ID: <span className="font-semibold text-primary">{paymentId}</span></p>
-            <p className="mt-1 text-sm text-body">Transaction ID: <span className="font-semibold text-primary">{transactionId}</span></p>
+            <p className="mt-2 text-sm text-body">Order ID: <span className="font-semibold text-primary">{order.orderNumber}</span></p>
             <p className="mt-1 text-sm text-body">Date: <span className="font-semibold text-primary">{formatDateTime(order.createdAt)}</span></p>
+            <p className="mt-1 break-all text-xs text-muted">Txn: {transactionId}</p>
           </div>
-          <div className="rounded-[16px] border border-[#ead7a2] bg-white p-4">
+          <div className="rounded-[14px] border border-[#ead7a2] bg-white p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Payment</p>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-2 flex flex-wrap gap-2">
               <StatusBadge tone={order.paymentStatus === 'Paid' ? 'green' : 'gold'}>
                 {order.paymentStatus || 'Pending'}
               </StatusBadge>
               <StatusBadge>{order.paymentMethod || 'Order placed'}</StatusBadge>
             </div>
-            <p className="mt-4 text-sm text-body">Payment Reference</p>
-            <p className="break-all text-sm font-semibold text-primary">{paymentId}</p>
             {order.paymentUpiId ? (
               <p className="mt-2 text-xs text-muted">UPI: {order.paymentUpiId}</p>
             ) : null}
-            <p className="mt-4 font-heading text-3xl">{formatPrice(order.total)}</p>
+            <p className="mt-2 font-heading text-3xl">{formatPrice(order.total)}</p>
+          </div>
+          <div className="rounded-[14px] border border-emerald-200 bg-emerald-50 p-4">
+            <div className="flex items-center gap-2 text-emerald-700">
+              <CalendarDays size={18} />
+              <p className="text-xs font-semibold uppercase tracking-[0.18em]">Delivery</p>
+            </div>
+            <p className="mt-2 font-heading text-2xl text-emerald-800">Within 5 days</p>
+            <p className="mt-1 text-sm font-semibold text-emerald-800">Expected by {expectedDate}</p>
           </div>
         </div>
 
-        <section className="px-5 pb-6 md:px-8">
-          <div className="overflow-hidden rounded-[18px] border border-[#ead7a2] bg-white">
+        <section className="px-5 py-4 md:px-7">
+          <div className="mb-3 flex items-center gap-2 text-primary">
+            <ReceiptText size={18} />
+            <p className="text-sm font-semibold uppercase tracking-[0.16em]">Items and Amount</p>
+          </div>
+          <div className="overflow-hidden rounded-[14px] border border-[#ead7a2] bg-white">
             <div className="hidden grid-cols-[1.3fr_0.7fr_0.4fr_0.6fr_0.7fr] gap-3 bg-[#f5ebd8] px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-primary md:grid">
               <span>Product</span>
               <span>Category</span>
@@ -225,7 +235,7 @@ export default function OrderReceipt({
               {order.items?.map((item) => (
                 <div
                   key={`${item.productId}-${item.color}`}
-                  className="grid grid-cols-1 gap-3 px-4 py-4 text-sm md:grid-cols-[1.3fr_0.7fr_0.4fr_0.6fr_0.7fr] md:items-center"
+                  className="grid grid-cols-1 gap-3 px-4 py-3 text-sm md:grid-cols-[1.3fr_0.7fr_0.4fr_0.6fr_0.7fr] md:items-center"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <img src={item.image} alt={item.name} className="h-16 w-14 rounded-[12px] object-cover" />
@@ -246,13 +256,13 @@ export default function OrderReceipt({
           </div>
         </section>
 
-        <section className="grid gap-5 px-5 pb-6 md:grid-cols-[1.2fr_0.8fr] md:px-8">
-          <div className="rounded-[18px] border border-[#ead7a2] bg-white p-5">
+        <section className="grid gap-4 px-5 pb-5 md:grid-cols-[1.2fr_0.8fr] md:px-7">
+          <div className="rounded-[14px] border border-[#ead7a2] bg-white p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Delivery</p>
                 <p className="mt-1 font-semibold text-primary">
-                  {receipt.expectedDeliveryText || 'Expected Delivery Within 5 Days'}
+                  {receipt.expectedDeliveryText || 'Delivery within 5 days'}
                 </p>
                 <p className="mt-1 text-sm text-body">{expectedDate}</p>
               </div>
@@ -263,7 +273,7 @@ export default function OrderReceipt({
             </div>
           </div>
 
-          <div className="rounded-[18px] border border-[#ead7a2] bg-[#1c120a] p-5 text-[#fffaf0]">
+          <div className="rounded-[14px] border border-[#C8A96B] bg-[#0A1F44] p-4 text-white">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#e8c97a]">Total Amount</p>
             <div className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between">
@@ -278,7 +288,7 @@ export default function OrderReceipt({
                 <span>Shipping</span>
                 <span>FREE</span>
               </div>
-              <div className="flex justify-between border-t border-[#5c4427] pt-3 text-lg font-semibold">
+              <div className="flex justify-between border-t border-white/20 pt-3 text-lg font-semibold">
                 <span>Total</span>
                 <span>{formatPrice(order.total)}</span>
               </div>
@@ -286,7 +296,7 @@ export default function OrderReceipt({
           </div>
         </section>
 
-        <footer className="border-t border-[#e8d8b4] bg-[#f5ebd8] px-5 py-5 text-sm text-body md:px-8">
+        <footer className="border-t border-[#e8d8b4] bg-[#f5ebd8] px-5 py-4 text-sm text-body md:px-7">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="font-heading text-2xl text-primary">Thank you for shopping with us.</p>

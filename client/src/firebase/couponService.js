@@ -22,7 +22,7 @@ export async function validateCoupon(code, subtotal) {
 
 export async function saveCoupon(coupon) {
   try {
-    if (coupon.id || coupon.code) {
+    if (coupon.id || coupon.originalCode) {
       return await couponApi.update(coupon.code || coupon.id, coupon);
     }
     return await couponApi.create(coupon);

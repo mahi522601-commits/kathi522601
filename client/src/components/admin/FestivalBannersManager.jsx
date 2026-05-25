@@ -9,6 +9,8 @@ const blankBanner = {
   title: '',
   subtitle: '',
   redirectUrl: '/collections',
+  creditLine: 'Website made by WayzenTech',
+  creditContact: '9398724704',
   startDate: '',
   endDate: '',
   active: true,
@@ -30,6 +32,10 @@ function BannerPreview({ banner, mode = 'mobile' }) {
         <div className="absolute inset-0 bg-gradient-to-br from-[#1c120a] to-[#6f5428]" />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/25" />
+      <div className="absolute inset-3 rounded-[inherit] border border-white/55" />
+      <div className="absolute inset-x-4 top-4 rounded-full border border-white/45 bg-black/35 px-3 py-2 text-center text-[9px] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-md">
+        {banner.creditLine || 'Website made by WayzenTech'} | Contact {banner.creditContact || '9398724704'}
+      </div>
       <div className="absolute inset-x-0 bottom-0 p-5 text-white">
         <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#f6d878]">Festival Banner</p>
         <h4 className="mt-2 font-heading text-3xl leading-none">{banner.title || 'Banner title'}</h4>
@@ -176,6 +182,10 @@ export default function FestivalBannersManager() {
             <textarea className="w-full rounded-[1.4rem] border border-borderwarm bg-white p-4 text-sm outline-none" rows="3" placeholder="Subtitle" value={draft.subtitle} onChange={(event) => setDraft({ ...draft, subtitle: event.target.value })} />
             <input className="input-shell" placeholder="Redirect link, for example /collections/sarees" value={draft.redirectUrl} onChange={(event) => setDraft({ ...draft, redirectUrl: event.target.value })} />
             <div className="grid gap-3 sm:grid-cols-2">
+              <input className="input-shell" placeholder="Frame credit text" value={draft.creditLine} onChange={(event) => setDraft({ ...draft, creditLine: event.target.value })} />
+              <input className="input-shell" placeholder="Frame contact number" value={draft.creditContact} onChange={(event) => setDraft({ ...draft, creditContact: event.target.value })} />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
               <label className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
                 Start date
                 <input type="date" className="input-shell mt-2" value={draft.startDate} onChange={(event) => setDraft({ ...draft, startDate: event.target.value })} />
@@ -191,7 +201,7 @@ export default function FestivalBannersManager() {
             </label>
             <ImageUploader value={draftImages} onChange={setDraftImages} productName="festival-banner" />
             <button type="button" className="action-button w-full" onClick={addBanner}>
-              Add Festival Banner
+              Add Fullscreen Festival Banner
             </button>
           </div>
         </div>
@@ -227,25 +237,31 @@ export default function FestivalBannersManager() {
                 </div>
                 <textarea className="w-full rounded-[1.4rem] border border-borderwarm bg-white p-4 text-sm outline-none" rows="2" value={banner.subtitle} onChange={(event) => updateBanner(index, { subtitle: event.target.value })} />
                 <div className="grid gap-3 md:grid-cols-2">
+                  <input className="input-shell" value={banner.creditLine || 'Website made by WayzenTech'} onChange={(event) => updateBanner(index, { creditLine: event.target.value })} />
+                  <input className="input-shell" value={banner.creditContact || '9398724704'} onChange={(event) => updateBanner(index, { creditContact: event.target.value })} />
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
                   <input type="date" className="input-shell" value={banner.startDate || ''} onChange={(event) => updateBanner(index, { startDate: event.target.value })} />
                   <input type="date" className="input-shell" value={banner.endDate || ''} onChange={(event) => updateBanner(index, { endDate: event.target.value })} />
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button type="button" className={`rounded-full px-4 py-2 text-sm font-semibold ${banner.active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`} onClick={() => updateBanner(index, { active: !banner.active })}>
-                    {banner.active ? 'Enabled' : 'Disabled'}
+                    {banner.active ? 'Disable Banner' : 'Enable Banner'}
                   </button>
                   <span className={`rounded-full px-4 py-2 text-sm font-semibold ${isBannerScheduled(banner) ? 'bg-[#fff6da] text-[#8b6724]' : 'bg-slate-100 text-slate-600'}`}>
                     {isBannerScheduled(banner) ? 'Live by schedule' : 'Not live now'}
                   </span>
                   <button type="button" className="rounded-full border border-borderwarm px-4 py-2 text-sm" onClick={() => moveBanner(index, -1)} disabled={index === 0}>
                     <ArrowUp size={14} />
+                    <span className="sr-only">Move banner up</span>
                   </button>
                   <button type="button" className="rounded-full border border-borderwarm px-4 py-2 text-sm" onClick={() => moveBanner(index, 1)} disabled={index === settings.festivalBanners.length - 1}>
                     <ArrowDown size={14} />
+                    <span className="sr-only">Move banner down</span>
                   </button>
                   <button type="button" className="inline-flex items-center gap-2 rounded-full border border-borderwarm px-4 py-2 text-sm text-maroon" onClick={() => deleteBanner(index)}>
                     <Trash2 size={14} />
-                    Delete
+                    Delete Banner
                   </button>
                 </div>
                 <div className="grid gap-3 md:grid-cols-[220px_1fr]">

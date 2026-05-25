@@ -68,7 +68,7 @@ export default function AdminCoupons() {
                   setShowForm((current) => !current);
                 }}
               >
-                {showForm ? 'Close Form' : 'Add Coupon'}
+                {showForm ? 'Close Coupon Form' : 'Add New Coupon'}
               </button>
             </div>
 
@@ -95,6 +95,7 @@ export default function AdminCoupons() {
                       <th className="px-4 py-4 font-semibold text-primary">Min Order</th>
                       <th className="px-4 py-4 font-semibold text-primary">Expires</th>
                       <th className="px-4 py-4 font-semibold text-primary">Active</th>
+                      <th className="px-4 py-4 font-semibold text-primary">Usage</th>
                       <th className="px-4 py-4 font-semibold text-primary">Actions</th>
                     </tr>
                   </thead>
@@ -106,6 +107,7 @@ export default function AdminCoupons() {
                         <td className="px-4 py-4">{coupon.minOrderValue}</td>
                         <td className="px-4 py-4">{coupon.expiresAt}</td>
                         <td className="px-4 py-4">{coupon.active ? 'Yes' : 'No'}</td>
+                        <td className="px-4 py-4">{coupon.usedCount || 0} / {coupon.maxUses || 'No limit'}</td>
                         <td className="px-4 py-4">
                           <div className="flex gap-2">
                             <button
@@ -116,14 +118,14 @@ export default function AdminCoupons() {
                                 setShowForm(true);
                               }}
                             >
-                              Edit
+                              Edit Coupon Details
                             </button>
                             <button
                               type="button"
                               className="rounded-full border border-borderwarm px-3 py-2 text-maroon"
                               onClick={() => handleDelete(coupon.code)}
                             >
-                              Delete
+                              Delete Coupon
                             </button>
                           </div>
                         </td>

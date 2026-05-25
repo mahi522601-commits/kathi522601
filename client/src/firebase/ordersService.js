@@ -11,7 +11,48 @@ function readLocalOrders() {
 }
 
 function writeLocalOrders(orders) {
-  localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(orders));
+  safeSetLocalStorage(LOCAL_ORDERS_KEY, orders.map(sanitizeOrderForStorage));
+}
+
+function safeSetLocalStorage(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    if (error?.name !== 'QuotaExceededError') {
+      throw error;
+    }
+
+    const compactValue = Array.isArray(value) ? value.slice(0, 10) : sanitizeOrderForStorage(value);
+    localStorage.setItem(key, JSON.stringify(compactValue));
+  }
+}
+
+function stripDataUrl(value) {
+  return typeof value === 'string' && value.startsWith('data:image/') ? '' : value;
+}
+
+function sanitizeOrderForStorage(order) {
+  if (!order || typeof order !== 'object') {
+    return order;
+  }
+
+  return {
+    ...order,
+    paymentProof: order.paymentProof
+      ? {
+          ...order.paymentProof,
+          dataUrl: undefined,
+          url: stripDataUrl(order.paymentProof.url),
+          thumbnail: stripDataUrl(order.paymentProof.thumbnail),
+        }
+      : order.paymentProof,
+    items: Array.isArray(order.items)
+      ? order.items.map((item) => ({
+          ...item,
+          image: stripDataUrl(item.image),
+        }))
+      : order.items,
+  };
 }
 
 function normalizeOrder(order) {
@@ -67,7 +108,7 @@ export async function placeOrder(order) {
       },
     };
     const savedOrder = normalizeOrder(await ordersApi.create(payload));
-    localStorage.setItem('khyathi-last-order', JSON.stringify(savedOrder));
+    safeSetLocalStorage('khyathi-last-order', savedOrder);
     return savedOrder;
   } catch (error) {
     if (import.meta.env.DEV) {
@@ -83,7 +124,7 @@ export async function placeOrder(order) {
     const normalizedOrder = normalizeOrder(localOrder);
     const orders = [normalizedOrder, ...readLocalOrders()];
     writeLocalOrders(orders);
-    localStorage.setItem('khyathi-last-order', JSON.stringify(normalizedOrder));
+    safeSetLocalStorage('khyathi-last-order', normalizedOrder);
     return normalizedOrder;
   }
 }
@@ -164,5 +205,17 @@ export async function updateOrder(orderId, patch) {
     );
     writeLocalOrders(orders);
     return orders.find((order) => order.id === orderId);
+  }
+}
+
+export async function deleteOrder(orderId) {
+  try {
+    return await ordersApi.remove(orderId);
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('Falling back to local order delete.', error);
+    }
+    writeLocalOrders(readLocalOrders().filter((order) => order.id !== orderId));
+    return true;
   }
 }

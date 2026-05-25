@@ -75,6 +75,10 @@ export default function FestivalBannerOverlay() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/35" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-transparent to-black/25" />
+          <div className="pointer-events-none absolute inset-4 rounded-[28px] border border-white/50 sm:inset-6" />
+          <div className="pointer-events-none fixed left-1/2 top-5 z-20 w-[min(92vw,680px)] -translate-x-1/2 rounded-full border border-white/35 bg-black/35 px-4 py-2 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-white backdrop-blur-md sm:top-7">
+            {activeBanner.creditLine || 'Website made by WayzenTech'} | Contact {activeBanner.creditContact || '9398724704'}
+          </div>
 
           <button
             type="button"
