@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useCart } from '../../hooks/useCart';
@@ -14,10 +14,32 @@ export default function ProductCard({ product }) {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [showQuickView, setShowQuickView] = useState(false);
   const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const visibleColors = useMemo(() => product.colors?.slice(0, 6) || [], [product.colors]);
   const extraCount = Math.max((product.colors?.length || 0) - visibleColors.length, 0);
-  const primaryImage = product.thumbnails?.[0] || product.images?.[0];
-  const hoverImage = product.thumbnails?.[1] || product.images?.[1] || primaryImage;
+  const hdImages = useMemo(() => {
+    const imageObjects = product.imageObjects?.map((image) => image.displayUrl || image.url || image.thumbnail) || [];
+    const images = product.images || [];
+    return [...imageObjects, ...images].filter(Boolean).filter((image, index, list) => list.indexOf(image) === index);
+  }, [product.imageObjects, product.images]);
+  const primaryImage = hdImages[activeImageIndex] || product.images?.[0] || product.thumbnails?.[0];
+  const hoverImage = hdImages[(activeImageIndex + 1) % Math.max(hdImages.length, 1)] || primaryImage;
+
+  useEffect(() => {
+    setActiveImageIndex(0);
+  }, [product.id]);
+
+  useEffect(() => {
+    if (hdImages.length <= 1) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setActiveImageIndex((current) => (current + 1) % hdImages.length);
+    }, 5000);
+
+    return () => window.clearInterval(intervalId);
+  }, [hdImages.length]);
 
   return (
     <>
@@ -30,19 +52,31 @@ export default function ProductCard({ product }) {
       >
         <div className="relative overflow-hidden">
           <Link to={`/product/${product.id}`} className="block">
-            <div className="relative h-[240px] bg-cream sm:h-[320px] lg:h-[360px]">
+            <div className="relative h-[310px] bg-cream sm:h-[410px] lg:h-[470px]">
               <img
                 src={primaryImage}
                 alt={product.name}
-                className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03] group-hover:opacity-0"
+                className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.03] group-hover:opacity-0"
                 loading="lazy"
               />
               <img
                 src={hoverImage}
                 alt={product.name}
-                className="absolute inset-0 h-full w-full object-cover opacity-0 transition duration-500 group-hover:scale-[1.03] group-hover:opacity-100"
+                className="absolute inset-0 h-full w-full object-cover opacity-0 transition duration-700 group-hover:scale-[1.03] group-hover:opacity-100"
                 loading="lazy"
               />
+              {hdImages.length > 1 ? (
+                <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-black/35 px-2 py-1 backdrop-blur-sm">
+                  {hdImages.slice(0, 6).map((image, index) => (
+                    <span
+                      key={image}
+                      className={`h-1.5 rounded-full transition-all ${
+                        index === activeImageIndex ? 'w-5 bg-white' : 'w-1.5 bg-white/55'
+                      }`}
+                    />
+                  ))}
+                </div>
+              ) : null}
             </div>
           </Link>
 

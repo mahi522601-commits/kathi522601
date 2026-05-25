@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import ImageUploader from './ImageUploader';
+import { colorMap } from '../../utils/colorMap';
 
 const blankProduct = {
   name: '',
@@ -21,6 +22,7 @@ const blankProduct = {
 export default function ProductForm({ product, onSave, onCancel, saving = false }) {
   const [form, setForm] = useState(blankProduct);
   const [error, setError] = useState('');
+  const [colorSearch, setColorSearch] = useState('');
 
   useEffect(() => {
     setForm(
@@ -51,6 +53,25 @@ export default function ProductForm({ product, onSave, onCancel, saving = false 
       ),
     }));
   }
+
+  function addPresetColor(name, hex) {
+    const exists = form.colors.some((color) => color.name.toLowerCase() === name.toLowerCase());
+    if (exists) {
+      return;
+    }
+
+    setForm((current) => ({
+      ...current,
+      colors: [...current.colors, { name, hex }],
+    }));
+  }
+
+  const filteredColors = useMemo(() => {
+    const search = colorSearch.trim().toLowerCase();
+    return Object.entries(colorMap)
+      .filter(([name]) => !search || name.toLowerCase().includes(search))
+      .slice(0, 18);
+  }, [colorSearch]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -115,8 +136,11 @@ export default function ProductForm({ product, onSave, onCancel, saving = false 
       </div>
 
       <div className="rounded-[1.4rem] border border-borderwarm bg-white p-5">
-        <div className="flex items-center justify-between">
-          <p className="font-semibold text-primary">Colors</p>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="font-semibold text-primary">Colors</p>
+            <p className="mt-1 text-sm text-muted">Search a color, tap a swatch, or add your own exact shade.</p>
+          </div>
           <button
             type="button"
             className="rounded-full border border-borderwarm px-3 py-2 text-sm text-primary"
@@ -125,14 +149,49 @@ export default function ProductForm({ product, onSave, onCancel, saving = false 
             Add Color
           </button>
         </div>
+        <div className="mt-4 rounded-[18px] border border-borderwarm bg-cream p-4">
+          <input
+            className="input-shell"
+            placeholder="Search color name, for example Rama Blue, Pista Green, Wine"
+            value={colorSearch}
+            onChange={(event) => setColorSearch(event.target.value)}
+          />
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            {filteredColors.map(([name, hex]) => (
+              <button
+                key={name}
+                type="button"
+                className="flex min-h-12 items-center gap-2 rounded-[14px] border border-borderwarm bg-white px-3 py-2 text-left text-xs font-semibold text-primary transition hover:border-gold"
+                onClick={() => addPresetColor(name, hex)}
+              >
+                <span className="h-6 w-6 rounded-full border border-black/10" style={{ backgroundColor: hex }} />
+                <span className="line-clamp-1">{name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="mt-4 space-y-3">
           {form.colors.map((color, index) => (
-            <div key={`${color.name}-${index}`} className="grid gap-3 md:grid-cols-[1fr_140px_100px]">
-              <input className="input-shell" placeholder="Color Name" value={color.name} onChange={(event) => updateColor(index, { name: event.target.value })} />
-              <input type="color" className="h-12 w-full rounded-full border border-borderwarm bg-white px-3" value={color.hex} onChange={(event) => updateColor(index, { hex: event.target.value })} />
+            <div key={`${color.name}-${index}`} className="grid gap-3 md:grid-cols-[1fr_150px_100px]">
+              <label className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+                Selected color name
+                <input
+                  className="input-shell mt-2"
+                  placeholder="Color Name"
+                  value={color.name}
+                  onChange={(event) => {
+                    const name = event.target.value;
+                    updateColor(index, { name, ...(colorMap[name] ? { hex: colorMap[name] } : {}) });
+                  }}
+                />
+              </label>
+              <label className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+                Exact shade
+                <input type="color" className="mt-2 h-12 w-full rounded-full border border-borderwarm bg-white px-3" value={color.hex} onChange={(event) => updateColor(index, { hex: event.target.value })} />
+              </label>
               <button
                 type="button"
-                className="rounded-full border border-borderwarm px-3 py-3 text-sm text-maroon"
+                className="self-end rounded-full border border-borderwarm px-3 py-3 text-sm text-maroon"
                 onClick={() =>
                   setForm((current) => ({
                     ...current,

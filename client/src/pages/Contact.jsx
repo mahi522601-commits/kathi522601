@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Mail, MapPin, MessageSquare, Phone } from 'lucide-react';
+import { MapPin, MessageSquare, Phone } from 'lucide-react';
 import contactApi from '../api/contactApi';
 import { siteConfig } from '../config/site';
 import SEO from '../components/SEO';
@@ -31,12 +31,6 @@ const CONTACT_INFO = [
     label: 'Phone / WhatsApp',
     value: siteConfig.phoneDisplay,
     href: siteConfig.phoneHref,
-  },
-  {
-    icon: Mail,
-    label: 'Email',
-    value: siteConfig.supportEmail,
-    href: `mailto:${siteConfig.supportEmail}`,
   },
   {
     icon: MapPin,

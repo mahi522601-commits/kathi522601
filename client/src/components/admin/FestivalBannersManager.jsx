@@ -21,25 +21,25 @@ function BannerPreview({ banner, mode = 'mobile' }) {
   const imageUrl = resolveBannerImage(banner.image);
   const frameClass =
     mode === 'mobile'
-      ? 'mx-auto h-[460px] max-w-[240px] rounded-[30px]'
-      : 'h-[260px] w-full rounded-[22px]';
+      ? 'mx-auto aspect-video h-auto max-w-[260px] rounded-[20px]'
+      : 'aspect-video h-auto w-full rounded-[20px]';
 
   return (
     <div className={`relative overflow-hidden border border-[#ead7a2] bg-[#120b07] shadow-[0_18px_48px_rgba(42,29,16,0.16)] ${frameClass}`}>
       {imageUrl ? (
-        <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-contain" />
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-[#1c120a] to-[#6f5428]" />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/25" />
       <div className="absolute inset-3 rounded-[inherit] border border-white/55" />
-      <div className="absolute inset-x-4 top-4 rounded-full border border-white/45 bg-black/35 px-3 py-2 text-center text-[9px] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-md">
-        {banner.creditLine || 'Website made by WayzenTech'} | Contact {banner.creditContact || '9398724704'}
-      </div>
       <div className="absolute inset-x-0 bottom-0 p-5 text-white">
         <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#f6d878]">Festival Banner</p>
         <h4 className="mt-2 font-heading text-3xl leading-none">{banner.title || 'Banner title'}</h4>
         <p className="mt-2 line-clamp-3 text-xs leading-5 text-white/75">{banner.subtitle || 'Banner subtitle preview'}</p>
+      </div>
+      <div className="absolute inset-x-4 bottom-3 rounded-full border border-white/35 bg-black/35 px-3 py-2 text-center text-[9px] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-md">
+        {banner.creditLine || 'Website made by WayzenTech'} | {banner.creditContact || '9398724704'}
       </div>
     </div>
   );

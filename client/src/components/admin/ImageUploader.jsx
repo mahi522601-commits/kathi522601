@@ -147,9 +147,9 @@ export default function ImageUploader({ value = [], onChange, productName = 'pro
               >
                 <div className="relative aspect-square overflow-hidden bg-cream">
                   <img
-                    src={image.thumbnail || image.displayUrl || image.url}
+                    src={image.displayUrl || image.url || image.thumbnail}
                     alt=""
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain"
                   />
                   <div className="absolute left-2 top-2">
                     {index === 0 ? (

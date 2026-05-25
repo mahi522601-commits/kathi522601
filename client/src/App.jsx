@@ -178,7 +178,7 @@ export default function App() {
       {!isAdmin && (
         <>
           <Footer />
-          <BottomNav onOpenSearch={() => setSearchOpen(true)} />
+          <BottomNav onOpenSearch={() => setSearchOpen(true)} onOpenCart={() => setCartOpen(true)} />
           <FloatingSocialBar />
           <FestivalBannerOverlay />
           <InstagramSurprisePopup />

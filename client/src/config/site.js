@@ -73,9 +73,9 @@ export const siteConfig = {
 
   mobileBottomNav: [
     {
-      label: 'Jewellery',
-      path: '/jewellery',
-      key: 'jewellery',
+      label: 'Home',
+      path: '/',
+      key: 'home',
     },
 
     {
@@ -88,6 +88,12 @@ export const siteConfig = {
       label: 'Search',
       path: '/search',
       key: 'search',
+    },
+
+    {
+      label: 'Cart',
+      path: '/cart',
+      key: 'cart',
     },
 
     {

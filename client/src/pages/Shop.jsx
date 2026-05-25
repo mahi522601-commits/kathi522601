@@ -19,7 +19,6 @@ export default function Shop() {
   const [selectedColors, setSelectedColors] = useState([]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [sortBy, setSortBy] = useState('featured');
-  const [visibleCount, setVisibleCount] = useState(8);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
@@ -70,7 +69,6 @@ export default function Shop() {
       });
   }, [allProducts, inStockOnly, priceRange, selectedCategories, selectedColors, sortBy]);
 
-  const visibleProducts = filteredProducts.slice(0, visibleCount);
   const categoryCounts = useMemo(() => {
     return allProducts.reduce((accumulator, product) => {
       accumulator[product.category] = (accumulator[product.category] || 0) + 1;
@@ -79,7 +77,6 @@ export default function Shop() {
   }, [allProducts]);
 
   function toggleCategory(value) {
-    setVisibleCount(8);
     setSelectedCategories((current) =>
       current.includes(value) ? current.filter((entry) => entry !== value) : [...current, value],
     );
@@ -221,24 +218,16 @@ export default function Shop() {
             <div className={`${mobileFiltersOpen ? 'block' : 'hidden'} lg:block`}>{sidebar}</div>
 
             <div>
-              <div className="grid grid-cols-2 gap-4 xl:grid-cols-4 xl:gap-6">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 xl:gap-7">
                 {loading
                   ? Array.from({ length: 6 }).map((_, index) => <ProductSkeleton key={index} />)
-                  : visibleProducts.map((product) => <ProductCard key={product.id} product={product} />)}
+                  : filteredProducts.map((product) => <ProductCard key={product.id} product={product} />)}
               </div>
 
-              {!loading && !visibleProducts.length ? (
+              {!loading && !filteredProducts.length ? (
                 <div className="mt-6 rounded-[1.7rem] border border-dashed border-borderwarm bg-white px-6 py-14 text-center">
                   <p className="font-heading text-4xl text-primary">No products found</p>
                   <p className="mt-3 text-sm text-muted">Try adjusting your filters or browsing another collection.</p>
-                </div>
-              ) : null}
-
-              {!loading && visibleCount < filteredProducts.length ? (
-                <div className="mt-8 text-center">
-                  <button type="button" className="action-button" onClick={() => setVisibleCount((current) => current + 6)}>
-                    Load More
-                  </button>
                 </div>
               ) : null}
             </div>
