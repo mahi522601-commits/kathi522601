@@ -19,27 +19,38 @@ const blankBanner = {
 
 function BannerPreview({ banner, mode = 'mobile' }) {
   const imageUrl = resolveBannerImage(banner.image);
+  const creditLine = banner.creditLine || 'Website made by WayzenTech';
+  const creditContact = banner.creditContact || '9398724704';
+  const creditParts = creditLine.match(/^(.*?)(Wayzen\s*Tech|WayzenTech)(.*)$/i);
   const frameClass =
     mode === 'mobile'
-      ? 'mx-auto aspect-video h-auto max-w-[260px] rounded-[20px]'
-      : 'aspect-video h-auto w-full rounded-[20px]';
+      ? 'mx-auto h-auto max-w-[260px] rounded-[10px]'
+      : 'h-auto w-full rounded-[10px]';
 
   return (
-    <div className={`relative overflow-hidden border border-[#ead7a2] bg-[#120b07] shadow-[0_18px_48px_rgba(42,29,16,0.16)] ${frameClass}`}>
-      {imageUrl ? (
-        <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-contain" />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1c120a] to-[#6f5428]" />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/25" />
-      <div className="absolute inset-3 rounded-[inherit] border border-white/55" />
-      <div className="absolute inset-x-0 bottom-0 p-5 text-white">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#f6d878]">Festival Banner</p>
-        <h4 className="mt-2 font-heading text-3xl leading-none">{banner.title || 'Banner title'}</h4>
-        <p className="mt-2 line-clamp-3 text-xs leading-5 text-white/75">{banner.subtitle || 'Banner subtitle preview'}</p>
+    <div className={`overflow-hidden border border-[#ded8e8] bg-[#f8f6fb] shadow-[0_18px_48px_rgba(42,29,16,0.16)] ${frameClass}`}>
+      <div className="relative aspect-video overflow-hidden bg-white">
+        {imageUrl ? (
+          <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#24104c] via-[#faf7ef] to-[#d8c6aa]" />
+        )}
+        <div className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-lg font-bold text-white">
+          ×
+        </div>
       </div>
-      <div className="absolute inset-x-4 bottom-3 rounded-full border border-white/35 bg-black/35 px-3 py-2 text-center text-[9px] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-md">
-        {banner.creditLine || 'Website made by WayzenTech'} | {banner.creditContact || '9398724704'}
+      <div className="bg-gradient-to-b from-white to-[#f4f1f8] p-4 text-center text-primary">
+        <h4 className="font-heading text-2xl leading-tight text-[#1f1046]">{banner.title || 'Banner title'}</h4>
+        <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#6f6682]">{banner.subtitle || 'Banner subtitle preview'}</p>
+        <div className="mx-auto mt-3 inline-flex rounded-full bg-gradient-to-r from-[#32105f] to-[#7b3eed] px-5 py-2 text-xs font-bold text-white">
+          Continue to Website
+        </div>
+        <div className="mt-3 border-t border-[#ded8e8] pt-3 text-[10px] text-[#807790]">
+          <span>{creditParts ? creditParts[1] : creditLine.replace(/Wayzen\s*Tech|WayzenTech/i, '').trim()}</span>
+          <span className="font-extrabold text-[#3b1592]"> {creditParts ? creditParts[2].replace(/\s+/g, '') : 'WayzenTech'}</span>
+          {creditParts?.[3] ? <span>{creditParts[3]}</span> : null}
+          <span className="ml-1 font-extrabold text-[#7b3eed]">{creditContact}</span>
+        </div>
       </div>
     </div>
   );
