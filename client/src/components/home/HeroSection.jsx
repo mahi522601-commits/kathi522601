@@ -1,4 +1,4 @@
-﻿import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -20,16 +20,30 @@ function resolveImageUrl(image) {
   return image.url || image.displayUrl || image.medium?.url || image.thumbnail || '';
 }
 
-const slideVariants = {
-  enter: (dir) => ({ opacity: 0, scale: 1.08, x: dir > 0 ? 60 : -60 }),
-  center: { opacity: 1, scale: 1, x: 0, transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] } },
-  exit: (dir) => ({ opacity: 0, scale: 0.96, x: dir > 0 ? -60 : 60, transition: { duration: 0.5, ease: 'easeIn' } }),
+const imageVariants = {
+  enter: (dir) => ({ opacity: 0, scale: 0.98, x: dir > 0 ? 42 : -42 }),
+  center: {
+    opacity: 1,
+    scale: 1,
+    x: 0,
+    transition: { duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] },
+  },
+  exit: (dir) => ({
+    opacity: 0,
+    scale: 1.02,
+    x: dir > 0 ? -42 : 42,
+    transition: { duration: 0.35, ease: 'easeIn' },
+  }),
 };
 
 const textVariants = {
-  hidden: { opacity: 0, y: 40 },
-  visible: (delay = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.65, delay, ease: [0.25, 0.46, 0.45, 0.94] } }),
-  exit: { opacity: 0, y: -30, transition: { duration: 0.35 } },
+  hidden: { opacity: 0, y: 28 },
+  visible: (delay = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, delay, ease: [0.25, 0.46, 0.45, 0.94] },
+  }),
+  exit: { opacity: 0, y: -22, transition: { duration: 0.25 } },
 };
 
 export default function HeroSection() {
@@ -39,17 +53,21 @@ export default function HeroSection() {
   const [direction, setDirection] = useState(1);
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
-  const heroRef = useRef(null);
   const progressRef = useRef(null);
   const startRef = useRef(Date.now());
 
-  const { scrollY } = useScroll();
-  const parallaxY = useTransform(scrollY, [0, 500], [0, 80]);
-
   useEffect(() => {
     let mounted = true;
-    getSiteSettings().then(s => { if (mounted) setSiteSettings(s); }).catch(() => {});
-    return () => { mounted = false; };
+    getSiteSettings()
+      .then((settings) => {
+        if (mounted) {
+          setSiteSettings(settings);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const slides = useMemo(() => {
@@ -57,20 +75,25 @@ export default function HeroSection() {
     return (siteSettings.heroSlides || fallbackSiteSettings.heroSlides)
       .filter((slide) => slide.active ?? true)
       .map((slide) => {
-        const product = products.find(e => e.id === slide.productId || e.slug === slide.productId) || fallbackProduct;
+        const product =
+          products.find((entry) => entry.id === slide.productId || entry.slug === slide.productId) ||
+          fallbackProduct;
         return {
           ...slide,
           product,
           href: slide.redirectUrl || (product ? `/product/${product.id}` : '/collections'),
           imageUrl: resolveImageUrl(slide.image || product?.imageObjects?.[0] || product?.images?.[0]),
           title: product?.name || slide.title || 'Khyathi Collections',
-          subtitle: slide.subtitle || product?.description || 'Discover refined drapes, premium fabrics, and occasion-ready elegance.',
+          subtitle:
+            slide.subtitle ||
+            product?.description ||
+            'Discover refined drapes, premium fabrics, and occasion-ready elegance.',
           price: product?.salePrice || null,
           category: product?.category || 'Luxury Edit',
           tags: product?.tags || [],
         };
       })
-      .filter(s => s.imageUrl);
+      .filter((slide) => slide.imageUrl);
   }, [products, siteSettings.heroSlides]);
 
   useEffect(() => {
@@ -88,28 +111,35 @@ export default function HeroSection() {
     image.src = nextSlide.imageUrl;
   }, [activeIndex, slides]);
 
-  // Auto-slide with progress tracking
   useEffect(() => {
-    if (!slides.length || isPaused) return;
+    if (!slides.length || isPaused) {
+      return undefined;
+    }
 
     startRef.current = Date.now();
-    const tick = () => {
+    progressRef.current = window.setInterval(() => {
       const elapsed = Date.now() - startRef.current;
       setProgress(Math.min((elapsed / AUTO_SLIDE_MS) * 100, 100));
-    };
-    progressRef.current = setInterval(tick, 16);
+    }, 16);
 
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
       setDirection(1);
-      setActiveIndex(i => (i + 1) % slides.length);
+      setActiveIndex((index) => (index + 1) % slides.length);
       startRef.current = Date.now();
       setProgress(0);
     }, AUTO_SLIDE_MS);
 
-    return () => { clearInterval(progressRef.current); clearTimeout(timer); };
+    return () => {
+      window.clearInterval(progressRef.current);
+      window.clearTimeout(timer);
+    };
   }, [activeIndex, slides.length, isPaused]);
 
-  useEffect(() => { if (activeIndex >= slides.length) setActiveIndex(0); }, [activeIndex, slides.length]);
+  useEffect(() => {
+    if (activeIndex >= slides.length) {
+      setActiveIndex(0);
+    }
+  }, [activeIndex, slides.length]);
 
   function goTo(index) {
     setDirection(index > activeIndex ? 1 : -1);
@@ -117,70 +147,49 @@ export default function HeroSection() {
     setProgress(0);
     startRef.current = Date.now();
   }
-  function prev() { goTo(activeIndex === 0 ? slides.length - 1 : activeIndex - 1); }
-  function next() { goTo((activeIndex + 1) % slides.length); }
+
+  function prev() {
+    goTo(activeIndex === 0 ? slides.length - 1 : activeIndex - 1);
+  }
+
+  function next() {
+    goTo((activeIndex + 1) % slides.length);
+  }
 
   const activeSlide = slides[activeIndex] || null;
-  if (!activeSlide) return null;
+  if (!activeSlide) {
+    return null;
+  }
 
   return (
     <section
-      ref={heroRef}
-      className="relative overflow-hidden"
-      style={{ minHeight: 'min(96vh, 900px)', background: '#0e0a06' }}
+      className="relative overflow-hidden bg-[#f8f1e6] text-primary"
+      style={{ minHeight: 'min(96vh, 900px)' }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Background image with parallax */}
-      <AnimatePresence mode="wait" custom={direction}>
-        <motion.div
-          key={`bg-${activeIndex}`}
-          custom={direction}
-          variants={slideVariants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          className="absolute inset-0"
-          style={{ y: parallaxY }}
-        >
-          <img
-            src={activeSlide.imageUrl}
-            alt={activeSlide.title}
-            className="h-full w-full object-cover object-top"
-            style={{ transform: 'scale(1.02)', filter: 'saturate(1.06)' }}
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-          />
-          {/* Cinematic gradient overlays */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-black/20" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/25" />
-          {/* Subtle grain texture for luxury feel */}
-          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundRepeat: 'repeat', backgroundSize: '120px' }} />
-        </motion.div>
-      </AnimatePresence>
+      <div className="absolute inset-x-0 top-0 h-px bg-gold/50" />
+      <div className="pointer-events-none absolute inset-y-0 left-[6vw] hidden w-px bg-primary/10 lg:block" />
+      <div className="pointer-events-none absolute inset-y-0 right-[6vw] hidden w-px bg-primary/10 lg:block" />
 
-      {/* Floating category tags â€” decorative */}
-      <div className="pointer-events-none absolute top-8 right-8 hidden lg:flex flex-col gap-2 items-end z-10">
-        {activeSlide.tags.slice(0, 3).map((tag, i) => (
-          <motion.span
-            key={`${tag}-${activeIndex}`}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 0.6, x: 0 }}
-            transition={{ delay: 0.3 + i * 0.1 }}
-            className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/50 border border-white/15 rounded-full px-3 py-1"
+      <div className="pointer-events-none absolute inset-x-0 top-20 z-0 overflow-hidden text-center">
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={`watermark-${activeIndex}`}
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 0.07, y: 0 }}
+            exit={{ opacity: 0, y: -18 }}
+            transition={{ duration: 0.45 }}
+            className="font-heading text-[22vw] leading-none text-primary"
           >
-            {tag}
-          </motion.span>
-        ))}
+            Sarees
+          </motion.p>
+        </AnimatePresence>
       </div>
 
-      {/* Main content */}
-      <div className="relative z-10 page-shell h-full flex items-center" style={{ minHeight: 'min(96vh, 900px)' }}>
-        <div className="w-full grid gap-9 py-16 lg:grid-cols-[minmax(0,0.88fr)_minmax(420px,0.92fr)_auto] lg:items-center lg:py-20 xl:grid-cols-[minmax(0,0.8fr)_minmax(520px,0.95fr)_auto]">
-          {/* Text column */}
-          <div className="max-w-[680px]">
-            {/* Eyebrow */}
+      <div className="relative z-10 page-shell flex min-h-[min(96vh,900px)] items-center py-16 lg:py-20">
+        <div className="grid w-full items-center gap-10 lg:grid-cols-[minmax(230px,0.72fr)_minmax(360px,0.9fr)_minmax(220px,0.62fr)] xl:grid-cols-[minmax(280px,0.72fr)_minmax(460px,0.9fr)_minmax(260px,0.62fr)]">
+          <div className="order-2 max-w-[560px] lg:order-1">
             <AnimatePresence mode="wait">
               <motion.div
                 key={`eye-${activeIndex}`}
@@ -189,16 +198,15 @@ export default function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="flex items-center gap-3 mb-5"
+                className="mb-5 flex items-center gap-3"
               >
-                <span className="h-px w-12 bg-gold/70" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.35em] text-gold">
+                <span className="h-px w-12 bg-gold" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.32em] text-gold-dark">
                   {activeSlide.eyebrow || activeSlide.category}
                 </span>
               </motion.div>
             </AnimatePresence>
 
-            {/* Headline */}
             <AnimatePresence mode="wait">
               <motion.h1
                 key={`h-${activeIndex}`}
@@ -207,14 +215,13 @@ export default function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="font-heading text-white leading-[0.92]"
-                style={{ fontSize: 'clamp(3rem, 6.5vw, 7rem)' }}
+                className="font-heading leading-[0.95] text-primary"
+                style={{ fontSize: 'clamp(3.2rem, 6.2vw, 7rem)' }}
               >
                 {activeSlide.title}
               </motion.h1>
             </AnimatePresence>
 
-            {/* Subtitle */}
             <AnimatePresence mode="wait">
               <motion.p
                 key={`sub-${activeIndex}`}
@@ -223,14 +230,12 @@ export default function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="mt-5 text-white/65 leading-7 max-w-[480px]"
-                style={{ fontSize: 'clamp(0.875rem, 1.2vw, 1.05rem)' }}
+                className="mt-5 max-w-[460px] text-sm leading-7 text-body sm:text-base"
               >
                 {activeSlide.subtitle}
               </motion.p>
             </AnimatePresence>
 
-            {/* Price + CTA */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={`cta-${activeIndex}`}
@@ -241,17 +246,25 @@ export default function HeroSection() {
                 exit="exit"
                 className="mt-8 flex flex-wrap items-center gap-4"
               >
-                {activeSlide.price && (
-                  <div className="border border-white/20 rounded-2xl px-5 py-3 backdrop-blur-sm bg-white/5">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-white/50">Starting At</p>
-                    <p className="font-heading text-2xl text-gold mt-0.5">{formatPrice(activeSlide.price)}</p>
+                {activeSlide.price ? (
+                  <div className="border-l-2 border-gold pl-4">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-muted">Starting At</p>
+                    <p className="mt-0.5 font-heading text-2xl text-primary">
+                      {formatPrice(activeSlide.price)}
+                    </p>
                   </div>
-                )}
-                <Link to={activeSlide.href} className="group inline-flex items-center gap-2 bg-white text-primary rounded-full px-7 py-3.5 text-sm font-semibold tracking-[0.08em] uppercase transition-all hover:bg-gold hover:text-white hover:shadow-[0_8px_32px_rgba(201,168,76,0.4)]">
+                ) : null}
+                <Link
+                  to={activeSlide.href}
+                  className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold uppercase tracking-[0.08em] text-white transition-all hover:bg-gold-dark"
+                >
                   Shop This Look
                   <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
                 </Link>
-                <Link to="/collections" className="inline-flex items-center gap-2 text-white/70 hover:text-white text-sm font-medium tracking-wide transition-colors">
+                <Link
+                  to="/collections"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-gold-dark"
+                >
                   Explore All
                   <ArrowRight size={13} />
                 </Link>
@@ -259,13 +272,13 @@ export default function HeroSection() {
             </AnimatePresence>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[680px] lg:mx-0">
-            <div className="relative aspect-[4/5] min-h-[430px] overflow-hidden rounded-[2rem] border border-white/20 bg-[#120c07]/80 shadow-[0_30px_90px_rgba(0,0,0,0.5)] ring-1 ring-gold/20 sm:min-h-[560px] lg:min-h-[650px]">
+          <div className="order-1 mx-auto w-full max-w-[560px] lg:order-2">
+            <div className="relative min-h-[460px] overflow-hidden rounded-t-[18rem] border border-gold/40 bg-[#fffaf1] shadow-[0_28px_80px_rgba(28,18,10,0.18)] sm:min-h-[620px] lg:min-h-[710px]">
               <AnimatePresence mode="wait" custom={direction}>
                 <motion.img
                   key={`frame-${activeIndex}`}
                   custom={direction}
-                  variants={slideVariants}
+                  variants={imageVariants}
                   initial="enter"
                   animate="center"
                   exit="exit"
@@ -278,94 +291,105 @@ export default function HeroSection() {
                   draggable="false"
                 />
               </AnimatePresence>
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/5" />
-              <div className="pointer-events-none absolute inset-3 rounded-[1.5rem] border border-white/25" />
+              <div className="pointer-events-none absolute inset-x-6 bottom-6 top-6 rounded-t-[16rem] border border-gold/25" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#fffaf1] to-transparent" />
             </div>
           </div>
 
-          {/* Slide thumbnails - vertical strip on desktop */}
-          <div className="hidden lg:flex flex-col gap-3 items-end">
-            {slides.map((slide, i) => (
-              <motion.button
-                key={slide.id}
-                type="button"
-                onClick={() => goTo(i)}
-                whileHover={{ scale: 1.05 }}
-                className={`relative overflow-hidden rounded-2xl transition-all duration-500 ${i === activeIndex ? 'opacity-100 ring-2 ring-gold ring-offset-2 ring-offset-black/60' : 'opacity-40 hover:opacity-70'}`}
-                style={{ width: i === activeIndex ? 100 : 76, height: i === activeIndex ? 130 : 100 }}
-              >
-                <img
-                  src={slide.imageUrl}
-                  alt={slide.title}
-                  className="h-full w-full object-cover object-top"
-                  loading="lazy"
-                  decoding="async"
-                />
-                {i === activeIndex && (
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2">
-                    <p className="text-[9px] font-semibold uppercase tracking-widest text-white/80 line-clamp-2 leading-tight">{slide.title}</p>
-                  </div>
-                )}
-              </motion.button>
-            ))}
+          <div className="order-3 lg:pl-2">
+            <div className="flex items-center justify-between gap-4 lg:block">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-gold-dark">
+                  {activeSlide.category}
+                </p>
+                <p className="mt-3 max-w-[260px] text-sm leading-6 text-body">
+                  Fresh picks change automatically every two seconds for a quick boutique preview.
+                </p>
+              </div>
+
+              <div className="mt-0 flex items-center gap-2 lg:mt-7">
+                <button
+                  type="button"
+                  onClick={prev}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-primary/20 text-primary transition hover:border-gold hover:text-gold-dark"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={next}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-primary/20 text-primary transition hover:border-gold hover:text-gold-dark"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-7 flex gap-2 overflow-hidden lg:grid lg:grid-cols-2">
+              {slides.slice(0, 4).map((slide, index) => (
+                <button
+                  key={slide.id}
+                  type="button"
+                  onClick={() => goTo(index)}
+                  className={`relative h-20 w-16 shrink-0 overflow-hidden rounded-t-full border transition lg:h-28 lg:w-full ${
+                    index === activeIndex
+                      ? 'border-gold opacity-100'
+                      : 'border-primary/10 opacity-55 hover:opacity-85'
+                  }`}
+                >
+                  <img
+                    src={slide.imageUrl}
+                    alt={slide.title}
+                    className="h-full w-full object-cover object-top"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom bar: dots + arrows + progress */}
-      <div className="absolute bottom-0 left-0 right-0 z-10">
-        {/* Progress bar */}
-        <div className="h-0.5 bg-white/10">
+      <div className="absolute inset-x-0 bottom-0 z-10">
+        <div className="h-1 bg-primary/10">
           <motion.div
             className="h-full bg-gold"
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.05, ease: 'linear' }}
           />
         </div>
-
         <div className="page-shell flex items-center justify-between py-5">
-          {/* Slide counter + dots */}
-          <div className="flex items-center gap-4">
-            <span className="text-xs font-semibold text-white/40 tracking-widest tabular-nums">
-              {String(activeIndex + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
-            </span>
-            <div className="flex items-center gap-1.5">
-              {slides.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => goTo(i)}
-                  className={`transition-all duration-500 rounded-full bg-white ${i === activeIndex ? 'w-8 h-1.5 opacity-100' : 'w-1.5 h-1.5 opacity-30 hover:opacity-60'}`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Arrows */}
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={prev} className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-white/60 transition hover:bg-white/10 hover:text-white">
-              <ChevronLeft size={18} />
-            </button>
-            <button type="button" onClick={next} className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-white/60 transition hover:bg-white/10 hover:text-white">
-              <ChevronRight size={18} />
-            </button>
+          <span className="text-xs font-semibold tracking-[0.2em] text-muted tabular-nums">
+            {String(activeIndex + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
+          </span>
+          <div className="flex items-center gap-1.5">
+            {slides.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => goTo(index)}
+                className={`rounded-full bg-primary transition-all duration-500 ${
+                  index === activeIndex ? 'h-1.5 w-9 opacity-100' : 'h-1.5 w-1.5 opacity-30 hover:opacity-60'
+                }`}
+              />
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Pause indicator */}
       <AnimatePresence>
-        {isPaused && (
+        {isPaused ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute top-5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full bg-black/40 backdrop-blur px-3 py-1.5 text-[10px] text-white/50 uppercase tracking-widest z-20"
+            className="absolute left-1/2 top-5 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-primary/10 bg-white/80 px-3 py-1.5 text-[10px] uppercase tracking-widest text-muted backdrop-blur"
           >
             <span className="h-1 w-1 rounded-full bg-gold animate-pulse" />
             Paused
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
     </section>
   );
