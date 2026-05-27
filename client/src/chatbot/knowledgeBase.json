@@ -1,0 +1,96 @@
+{
+  "greetingSuggestions": [
+    "Show sarees",
+    "Show jewellery",
+    "Delivery help",
+    "Payment help"
+  ],
+  "fallbackSuggestions": [
+    "Recommend sarees",
+    "Recommend jewellery",
+    "Delivery timeline",
+    "Talk to support"
+  ],
+  "intents": [
+    {
+      "name": "greeting",
+      "keywords": ["hi", "hello", "hey", "namaste", "good morning", "good evening"],
+      "suggestions": ["Show sarees", "Show jewellery", "Bridal picks", "Need support"],
+      "responses": [
+        "Namaste. I am your Khyathi Collections assistant. I can help with saree styling, jewellery picks, delivery, payments, and support."
+      ]
+    },
+    {
+      "name": "sarees",
+      "keywords": ["saree", "sarees", "sari", "silk", "pattu", "georgette", "half saree"],
+      "suggestions": ["Wedding sarees", "Soft silk sarees", "Budget sarees", "Half sarees"],
+      "responses": [
+        "Here are saree styles that are getting strong interest right now. I have included elegant festive, bridal, and versatile daily-wear options."
+      ]
+    },
+    {
+      "name": "jewellery",
+      "keywords": ["jewellery", "jewelry", "necklace", "earrings", "bangles", "kundan", "temple jewellery"],
+      "suggestions": ["Temple jewellery", "Bridal jewellery", "Antique bangles", "Pearl sets"],
+      "responses": [
+        "Here are jewellery picks that pair beautifully with silk sarees, festive drapes, and bridal looks."
+      ]
+    },
+    {
+      "name": "bridal",
+      "keywords": ["bridal", "wedding", "engagement", "reception", "muhurtam"],
+      "suggestions": ["Bridal sarees", "Bridal jewellery", "Temple necklace sets", "Contact stylist"],
+      "responses": [
+        "For bridal styling, I recommend starting with one rich saree option and one statement jewellery layer so the full look feels balanced and premium."
+      ]
+    },
+    {
+      "name": "delivery",
+      "keywords": ["delivery", "shipping", "dispatch", "courier", "how many days", "arrive"],
+      "suggestions": ["Payment help", "Return policy", "Contact support", "Track my order"],
+      "responses": [
+        "We ship across India. Orders are usually processed quickly, and delivery timelines vary by destination, stock readiness, and festive demand."
+      ]
+    },
+    {
+      "name": "payment",
+      "keywords": ["payment", "pay", "phonepe", "google pay", "gpay", "paytm", "upi"],
+      "suggestions": ["PhonePe payment", "Google Pay", "Paytm", "Talk to support"],
+      "responses": [
+        "You can complete secure online checkout using PhonePe, Google Pay, or Paytm."
+      ]
+    },
+    {
+      "name": "returns",
+      "keywords": ["return", "refund", "exchange", "replace"],
+      "suggestions": ["Delivery help", "Talk to support", "Care instructions", "Payment help"],
+      "responses": [
+        "If you need help with returns or exchanges, our team can guide you on eligibility, condition checks, and the next steps."
+      ]
+    },
+    {
+      "name": "care",
+      "keywords": ["wash", "care", "clean", "store", "maintenance", "dry clean"],
+      "suggestions": ["Saree recommendations", "Jewellery recommendations", "Talk to support", "More help"],
+      "responses": [
+        "For premium sarees and jewellery, gentle care matters. I can guide you with storage, cleaning, and occasion-specific handling tips."
+      ]
+    },
+    {
+      "name": "support",
+      "keywords": ["support", "contact", "phone", "call", "location", "address", "instagram"],
+      "suggestions": ["Call support", "WhatsApp support", "Instagram page", "Delivery help"],
+      "responses": [
+        "Our team can help directly with styling, order questions, delivery updates, and product guidance."
+      ]
+    },
+    {
+      "name": "offers",
+      "keywords": ["offer", "discount", "sale", "coupon", "deal", "surprise offers"],
+      "suggestions": ["Instagram offers", "Top sellers", "Jewellery picks", "Budget sarees"],
+      "responses": [
+        "We keep our best surprise offers around selected product drops, curated edits, and Instagram updates."
+      ]
+    }
+  ]
+}

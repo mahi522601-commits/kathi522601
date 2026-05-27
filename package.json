@@ -1,0 +1,21 @@
+{
+  "name": "khyathi-collections",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "npm --prefix client run dev",
+    "dev:server": "npm --prefix server run dev",
+    "install:all": "npm install && npm --prefix client install && npm --prefix server install",
+    "build": "npm --prefix client install && npm --prefix client run build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "vite-plugin-sitemap": "^0.8.2"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "razorpay": "^2.9.6"
+  }
+}
