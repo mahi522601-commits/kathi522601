@@ -1,4 +1,4 @@
-function parseMultilineSecret(value) {
+﻿function parseMultilineSecret(value) {
   return value?.replace(/\\n/g, '\n') || '';
 }
 

@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+﻿import { Helmet } from 'react-helmet-async';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Mail, Phone, RefreshCw, Search, User, X } from 'lucide-react';
@@ -71,7 +71,7 @@ export default function AdminMessages() {
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#f6d878]">Customer inbox</p>
                 <h1 className="mt-3 font-heading text-5xl text-white">Contact Messages</h1>
                 <p className="mt-1 text-sm text-[#d8c6aa]">
-                  {unreadCount > 0 ? <span className="text-maroon font-semibold">{unreadCount} unread · </span> : null}
+                  {unreadCount > 0 ? <span className="text-maroon font-semibold">{unreadCount} unread Â· </span> : null}
                   {messages.length} total messages
                 </p>
               </div>

@@ -1,4 +1,4 @@
-import axiosInstance from './axiosInstance';
+﻿import axiosInstance from './axiosInstance';
 
 const uploadApi = {
   async uploadSingle(base64, name) {

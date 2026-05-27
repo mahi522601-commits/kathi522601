@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
+﻿import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -6,7 +6,7 @@ import { getSiteSettings, fallbackSiteSettings } from '../../firebase/settingsSe
 import { useProducts } from '../../hooks/useProducts';
 import { formatPrice } from '../../utils/formatPrice';
 
-const AUTO_SLIDE_MS = 5000; // 5 seconds — more cinematic
+const AUTO_SLIDE_MS = 5000; // 5 seconds â€” more cinematic
 
 function resolveImageUrl(image) {
   return image?.displayUrl || image?.url || image?.thumbnail || image || '';
@@ -135,7 +135,7 @@ export default function HeroSection() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Floating category tags — decorative */}
+      {/* Floating category tags â€” decorative */}
       <div className="pointer-events-none absolute top-8 right-8 hidden lg:flex flex-col gap-2 items-end z-10">
         {activeSlide.tags.slice(0, 3).map((tag, i) => (
           <motion.span
@@ -234,7 +234,7 @@ export default function HeroSection() {
             </AnimatePresence>
           </div>
 
-          {/* Slide thumbnails — vertical strip on desktop */}
+          {/* Slide thumbnails â€” vertical strip on desktop */}
           <div className="hidden lg:flex flex-col gap-3 items-end">
             {slides.map((slide, i) => (
               <motion.button

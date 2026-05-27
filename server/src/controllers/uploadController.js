@@ -1,4 +1,4 @@
-import { deleteFromImgBB, uploadMultipleToImgBB, uploadToImgBB } from '../services/imgbb.js';
+﻿import { deleteFromImgBB, uploadMultipleToImgBB, uploadToImgBB } from '../services/imgbb.js';
 
 export async function uploadImage(req, res, next) {
   try {

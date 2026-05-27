@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+﻿import { Helmet } from 'react-helmet-async';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, RefreshCw, ShieldCheck, XCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -18,7 +18,7 @@ const PAYMENT_APPS = [
   {
     id: 'phonepe',
     name: 'PhonePe',
-    logo: 'पे',
+    logo: 'à¤ªà¥‡',
     className: 'bg-[#5f259f] text-white',
   },
   {

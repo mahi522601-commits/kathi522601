@@ -1,4 +1,4 @@
-import { adminAuth } from '../config/firebase.js';
+﻿import { adminAuth } from '../config/firebase.js';
 import { env } from '../config/environment.js';
 import { getDocument } from '../services/firestore.js';
 import { isAdminEmail } from '../utils/adminEmails.js';

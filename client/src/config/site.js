@@ -1,4 +1,4 @@
-export const siteConfig = {
+﻿export const siteConfig = {
   name: 'Khyathi Collections',
   supportEmail: 'kathifashions.store@gmail.com',
   location: 'Narasaropet',

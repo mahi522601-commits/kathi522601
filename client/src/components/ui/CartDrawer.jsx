@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -128,7 +128,7 @@ export default function CartDrawer({ open, onClose }) {
                     onClick={() => setOrderNoteOpen((current) => !current)}
                   >
                     Add Order Note
-                    <span>{orderNoteOpen ? '−' : '+'}</span>
+                    <span>{orderNoteOpen ? 'âˆ’' : '+'}</span>
                   </button>
                   {orderNoteOpen ? (
                     <div className="border-t border-borderwarm px-5 pb-5">
@@ -144,7 +144,7 @@ export default function CartDrawer({ open, onClose }) {
                     onClick={() => setCouponOpen((current) => !current)}
                   >
                     Add Coupon Code
-                    <span>{couponOpen ? '−' : '+'}</span>
+                    <span>{couponOpen ? 'âˆ’' : '+'}</span>
                   </button>
                   {couponOpen ? (
                     <div className="border-t border-borderwarm px-5 pb-5">

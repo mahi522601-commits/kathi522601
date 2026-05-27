@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+﻿import { Helmet } from 'react-helmet-async';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ProductCard from '../components/ui/ProductCard';
@@ -153,7 +153,7 @@ export default function Shop() {
               }}
               className="w-full accent-[#2c1a0e]"
             />
-            <p className="text-sm text-muted">Rs. {priceRange[0]} — Rs. {priceRange[1]}</p>
+            <p className="text-sm text-muted">Rs. {priceRange[0]} â€” Rs. {priceRange[1]}</p>
           </div>
         </div>
 

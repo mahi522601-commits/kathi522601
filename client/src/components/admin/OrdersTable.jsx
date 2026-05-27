@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import { Download, X } from 'lucide-react';
 import OrderReceipt from '../receipt/OrderReceipt';
 import { formatPrice } from '../../utils/formatPrice';
@@ -240,7 +240,7 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                   <div key={`${item.productId}-${item.color}`} className="rounded-[1.2rem] bg-cream p-4">
                     <p className="font-semibold text-primary">{item.name}</p>
                     <p className="mt-1 text-sm text-muted">
-                      {item.color} • Qty {item.qty}
+                      {item.color} â€¢ Qty {item.qty}
                     </p>
                   </div>
                 ))}

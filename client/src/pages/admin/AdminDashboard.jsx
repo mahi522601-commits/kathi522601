@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+﻿import { Helmet } from 'react-helmet-async';
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Package, ShoppingBag, Star, Users } from 'lucide-react';

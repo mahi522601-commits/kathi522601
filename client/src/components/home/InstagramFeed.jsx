@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+﻿import { motion } from 'framer-motion';
 import { MessageCircle, Sparkles } from 'lucide-react';
 import { instagramPosts } from '../../firebase/seedData';
 import { InstagramIcon } from '../ui/Icons';

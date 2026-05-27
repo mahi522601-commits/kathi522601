@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+﻿import { lazy, Suspense, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import AnnouncementBar from './components/layout/AnnouncementBar';

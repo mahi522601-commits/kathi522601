@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+﻿import { Helmet } from 'react-helmet-async';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -27,7 +27,7 @@ export default function OrderConfirmation() {
     const params = new URLSearchParams(location.search);
     const payuStatus = params.get('status');
 
-    // Not a PayU redirect — skip
+    // Not a PayU redirect â€” skip
     if (!payuStatus) {
       return;
     }
@@ -49,7 +49,7 @@ export default function OrderConfirmation() {
       })();
 
       if (!pendingOrder) {
-        // Pending order missing — payment may already have been confirmed
+        // Pending order missing â€” payment may already have been confirmed
         return;
       }
 

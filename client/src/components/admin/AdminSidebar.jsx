@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+﻿import { NavLink } from 'react-router-dom';
 import { BarChart3, Image, MessageSquare, Package, Percent, ShoppingBag } from 'lucide-react';
 import AdminNotifications from './AdminNotifications';
 import BrandLogo from '../ui/BrandLogo';
@@ -23,7 +23,7 @@ export default function AdminSidebar() {
             <p className="text-xs uppercase tracking-[0.16em] text-[#dcc8af]">Khyathi Collections</p>
           </div>
         </div>
-        {/* Notifications bell — renders with its own state */}
+        {/* Notifications bell â€” renders with its own state */}
         <AdminNotifications />
       </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, Check, CheckCheck, ExternalLink, MessageSquare, Package, ShoppingBag, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -21,7 +21,7 @@ function buildNotifications(orders, messages) {
     id: `order-${order.id}`,
     type: order.status === 'Pending' ? 'new_order' : 'order_update',
     title: order.status === 'Pending' ? 'New Order Received' : `Order ${order.status}`,
-    body: `${order.orderNumber} · ${order.customerName} · ${formatPrice(order.total)}`,
+    body: `${order.orderNumber} Â· ${order.customerName} Â· ${formatPrice(order.total)}`,
     time: order.createdAt,
     read: false,
     link: '/admin/orders',
@@ -32,7 +32,7 @@ function buildNotifications(orders, messages) {
     id: `msg-${msg.id}`,
     type: 'contact',
     title: 'New Contact Message',
-    body: `${msg.name} · ${msg.email}`,
+    body: `${msg.name} Â· ${msg.email}`,
     time: msg.createdAt,
     read: false,
     link: '/admin/messages',

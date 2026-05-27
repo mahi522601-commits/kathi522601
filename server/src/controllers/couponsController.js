@@ -1,4 +1,4 @@
-import { createDocument, deleteDocument, getDocument, listDocuments, updateDocument } from '../services/firestore.js';
+﻿import { createDocument, deleteDocument, getDocument, listDocuments, updateDocument } from '../services/firestore.js';
 
 export async function getCoupons(req, res, next) {
   try {

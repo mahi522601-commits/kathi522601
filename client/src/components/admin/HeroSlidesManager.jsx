@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRight, Loader2, Save, Sparkles, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getSiteSettings, saveSiteSettings } from '../../firebase/settingsService';
@@ -315,7 +315,7 @@ export default function HeroSlidesManager({ products = [] }) {
                           </h4>
                           <p className="mt-1 text-sm text-muted">
                             {product?.category || 'Featured Collection'}
-                            {product?.salePrice ? ` • ${formatPrice(product.salePrice)}` : ''}
+                            {product?.salePrice ? ` â€¢ ${formatPrice(product.salePrice)}` : ''}
                           </p>
                           <p className="mt-2 text-sm leading-6 text-body">
                             {slide.subtitle || product?.description}
