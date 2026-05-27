@@ -6,7 +6,15 @@ import { formatPrice } from '../../utils/formatPrice';
 import ImageUploader from './ImageUploader';
 
 function imageUrl(image) {
-  return image?.displayUrl || image?.url || image?.thumbnail || image || '';
+  if (!image) {
+    return '';
+  }
+
+  if (typeof image === 'string') {
+    return image;
+  }
+
+  return image.url || image.displayUrl || image.thumbnail || '';
 }
 
 function createSlide(product, image, index) {
@@ -300,7 +308,9 @@ export default function HeroSlidesManager({ products = [] }) {
                       <img
                         src={imageUrl(slide.image)}
                         alt={slide.title || product?.name || 'Hero slide'}
-                        className="aspect-[4/5] h-full w-full object-cover"
+                        className="aspect-[4/5] h-full w-full object-contain object-center"
+                        loading="lazy"
+                        decoding="async"
                       />
                     </div>
 
@@ -395,11 +405,23 @@ export default function HeroSlidesManager({ products = [] }) {
                         </button>
                       </div>
                       <div className="grid gap-3 md:grid-cols-[1fr_120px]">
-                        <div className="overflow-hidden rounded-[18px] border border-borderwarm bg-white">
-                          <img src={imageUrl(slide.image)} alt="" className="aspect-[16/7] w-full object-cover" />
+                        <div className="overflow-hidden rounded-[18px] border border-borderwarm bg-[#120c07]">
+                          <img
+                            src={imageUrl(slide.image)}
+                            alt=""
+                            className="aspect-[16/7] w-full object-contain object-center"
+                            loading="lazy"
+                            decoding="async"
+                          />
                         </div>
-                        <div className="overflow-hidden rounded-[18px] border border-borderwarm bg-white">
-                          <img src={imageUrl(slide.image)} alt="" className="aspect-[9/16] w-full object-cover" />
+                        <div className="overflow-hidden rounded-[18px] border border-borderwarm bg-[#120c07]">
+                          <img
+                            src={imageUrl(slide.image)}
+                            alt=""
+                            className="aspect-[9/16] w-full object-contain object-center"
+                            loading="lazy"
+                            decoding="async"
+                          />
                         </div>
                       </div>
                     </div>

@@ -6,10 +6,18 @@ import { getSiteSettings, fallbackSiteSettings } from '../../firebase/settingsSe
 import { useProducts } from '../../hooks/useProducts';
 import { formatPrice } from '../../utils/formatPrice';
 
-const AUTO_SLIDE_MS = 5000; // 5 seconds â€” more cinematic
+const AUTO_SLIDE_MS = 2000;
 
 function resolveImageUrl(image) {
-  return image?.displayUrl || image?.url || image?.thumbnail || image || '';
+  if (!image) {
+    return '';
+  }
+
+  if (typeof image === 'string') {
+    return image;
+  }
+
+  return image.url || image.displayUrl || image.medium?.url || image.thumbnail || '';
 }
 
 const slideVariants = {
@@ -65,6 +73,21 @@ export default function HeroSection() {
       .filter(s => s.imageUrl);
   }, [products, siteSettings.heroSlides]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || slides.length < 2) {
+      return;
+    }
+
+    const nextSlide = slides[(activeIndex + 1) % slides.length];
+    if (!nextSlide?.imageUrl) {
+      return;
+    }
+
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = nextSlide.imageUrl;
+  }, [activeIndex, slides]);
+
   // Auto-slide with progress tracking
   useEffect(() => {
     if (!slides.length || isPaused) return;
@@ -104,7 +127,7 @@ export default function HeroSection() {
     <section
       ref={heroRef}
       className="relative overflow-hidden"
-      style={{ minHeight: 'min(92vh, 820px)', background: '#0e0a06' }}
+      style={{ minHeight: 'min(96vh, 900px)', background: '#0e0a06' }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -124,12 +147,14 @@ export default function HeroSection() {
             src={activeSlide.imageUrl}
             alt={activeSlide.title}
             className="h-full w-full object-cover object-top"
-            style={{ transform: 'scale(1.05)' }}
+            style={{ transform: 'scale(1.02)', filter: 'saturate(1.06)' }}
             loading="eager"
+            fetchPriority="high"
+            decoding="async"
           />
           {/* Cinematic gradient overlays */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-black/10" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/25" />
           {/* Subtle grain texture for luxury feel */}
           <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundRepeat: 'repeat', backgroundSize: '120px' }} />
         </motion.div>
@@ -151,8 +176,8 @@ export default function HeroSection() {
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 page-shell h-full flex items-center" style={{ minHeight: 'min(92vh, 820px)' }}>
-        <div className="w-full grid lg:grid-cols-[1fr_auto] gap-8 items-center py-16 lg:py-20">
+      <div className="relative z-10 page-shell h-full flex items-center" style={{ minHeight: 'min(96vh, 900px)' }}>
+        <div className="w-full grid gap-9 py-16 lg:grid-cols-[minmax(0,0.88fr)_minmax(420px,0.92fr)_auto] lg:items-center lg:py-20 xl:grid-cols-[minmax(0,0.8fr)_minmax(520px,0.95fr)_auto]">
           {/* Text column */}
           <div className="max-w-[680px]">
             {/* Eyebrow */}
@@ -234,7 +259,31 @@ export default function HeroSection() {
             </AnimatePresence>
           </div>
 
-          {/* Slide thumbnails â€” vertical strip on desktop */}
+          <div className="relative mx-auto w-full max-w-[680px] lg:mx-0">
+            <div className="relative aspect-[4/5] min-h-[430px] overflow-hidden rounded-[2rem] border border-white/20 bg-[#120c07]/80 shadow-[0_30px_90px_rgba(0,0,0,0.5)] ring-1 ring-gold/20 sm:min-h-[560px] lg:min-h-[650px]">
+              <AnimatePresence mode="wait" custom={direction}>
+                <motion.img
+                  key={`frame-${activeIndex}`}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  src={activeSlide.imageUrl}
+                  alt={activeSlide.title}
+                  className="absolute inset-0 h-full w-full object-contain object-center"
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                  draggable="false"
+                />
+              </AnimatePresence>
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/5" />
+              <div className="pointer-events-none absolute inset-3 rounded-[1.5rem] border border-white/25" />
+            </div>
+          </div>
+
+          {/* Slide thumbnails - vertical strip on desktop */}
           <div className="hidden lg:flex flex-col gap-3 items-end">
             {slides.map((slide, i) => (
               <motion.button
@@ -245,7 +294,13 @@ export default function HeroSection() {
                 className={`relative overflow-hidden rounded-2xl transition-all duration-500 ${i === activeIndex ? 'opacity-100 ring-2 ring-gold ring-offset-2 ring-offset-black/60' : 'opacity-40 hover:opacity-70'}`}
                 style={{ width: i === activeIndex ? 100 : 76, height: i === activeIndex ? 130 : 100 }}
               >
-                <img src={slide.imageUrl} alt={slide.title} className="h-full w-full object-cover" />
+                <img
+                  src={slide.imageUrl}
+                  alt={slide.title}
+                  className="h-full w-full object-cover object-top"
+                  loading="lazy"
+                  decoding="async"
+                />
                 {i === activeIndex && (
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2">
                     <p className="text-[9px] font-semibold uppercase tracking-widest text-white/80 line-clamp-2 leading-tight">{slide.title}</p>
