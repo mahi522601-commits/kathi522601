@@ -2,10 +2,8 @@ import { useEffect, useState } from 'react';
 
 const ANNOUNCEMENTS = [
   'Free shipping across India for every order.',
-  'Curated sarees and jewellery with a premium festive finish.',
-  'Secure online payments with PhonePe, Google Pay, and Paytm.',
-  'Discover luxury ethnic edits for weddings, gifting, and celebrations.',
-  'Personal styling support available from our Narasaropet team.',
+    'Follow us on Instagram and get a surprise gift with your order.',
+  'Website crafted by WayZenTech • Contact: 9398724704',
 ];
 
 export default function AnnouncementBar() {
