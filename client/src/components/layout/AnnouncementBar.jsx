@@ -1,9 +1,8 @@
 ﻿import { useEffect, useState } from 'react';
 
 const ANNOUNCEMENTS = [
-  'Free shipping across India for every order.',
     'Follow us on Instagram and get a surprise gift with your order.',
-  'Website crafted by WayZenTech â€¢ Contact: 9398724704',
+  'Website made by by WayZenTech Contact: 9398724704',
 ];
 
 export default function AnnouncementBar() {

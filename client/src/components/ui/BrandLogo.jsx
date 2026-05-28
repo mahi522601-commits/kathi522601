@@ -174,6 +174,8 @@ const sizeClasses = {
 export default function BrandLogo({
   size = 'md',
   className = '',
+  imageClassName = 'h-full w-full object-contain drop-shadow-[0_10px_24px_rgba(44,26,14,0.16)]',
+  placeholderClassName = 'h-full w-full rounded-full bg-[radial-gradient(circle_at_center,_rgba(201,168,76,0.18),_transparent_68%)]',
   alt = 'Khyathi Collections',
 }) {
   const [logoSrc, setLogoSrc] = useState(cachedLogoSrc);
@@ -206,11 +208,11 @@ export default function BrandLogo({
         <img
           src={logoSrc}
           alt={alt}
-          className="h-full w-full object-contain drop-shadow-[0_10px_24px_rgba(44,26,14,0.16)]"
+          className={imageClassName}
           loading="eager"
         />
       ) : (
-        <span className="h-full w-full rounded-full bg-[radial-gradient(circle_at_center,_rgba(201,168,76,0.18),_transparent_68%)]" />
+        <span className={placeholderClassName} />
       )}
     </span>
   );

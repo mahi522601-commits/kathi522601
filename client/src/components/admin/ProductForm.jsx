@@ -18,6 +18,25 @@ const blankProduct = {
   tags: '',
 };
 
+function normalizeColors(colors) {
+  if (!Array.isArray(colors) || !colors.length) {
+    return blankProduct.colors;
+  }
+
+  return colors
+    .map((color) => {
+      if (typeof color === 'string') {
+        return { name: color, hex: '#000000' };
+      }
+
+      return {
+        name: color.name || '',
+        hex: /^#[0-9a-f]{6}$/i.test(color.hex || '') ? color.hex : '#000000',
+      };
+    })
+    .filter((color) => color.name.trim() || color.hex);
+}
+
 export default function ProductForm({ product, onSave, onCancel, saving = false }) {
   const [form, setForm] = useState(blankProduct);
   const [error, setError] = useState('');
@@ -28,6 +47,7 @@ export default function ProductForm({ product, onSave, onCancel, saving = false 
         ? {
             ...product,
             imageObjects: product.imageObjects || product.images || [],
+            colors: normalizeColors(product.colors),
             tags: Array.isArray(product.tags) ? product.tags.join(', ') : product.tags || '',
           }
         : blankProduct,
@@ -81,6 +101,7 @@ export default function ProductForm({ product, onSave, onCancel, saving = false 
       originalPrice: Number(form.originalPrice),
       salePrice: Number(form.salePrice),
       discountPercent,
+      colors: normalizeColors(form.colors).filter((color) => color.name.trim()),
       tags: form.tags
         .split(',')
         .map((item) => item.trim())

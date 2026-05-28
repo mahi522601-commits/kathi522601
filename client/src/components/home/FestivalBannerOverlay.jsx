@@ -1,4 +1,4 @@
-﻿import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, X } from 'lucide-react';
@@ -54,64 +54,53 @@ export default function FestivalBannerOverlay() {
     <AnimatePresence>
       {activeBanner && imageUrl && !dismissed ? (
         <motion.section
-          className="fixed inset-0 z-[70] min-h-screen overflow-hidden bg-black text-white"
+          className="fixed inset-0 z-[70] flex min-h-screen items-center justify-center overflow-hidden bg-black/68 px-4 py-8 text-white backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.45 }}
         >
           <motion.div
-            role="img"
-            aria-label={activeBanner.title}
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{
-              backgroundImage: `url("${imageUrl}")`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center center',
-            }}
-            initial={{ scale: 1.04 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1] }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/35" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-transparent to-black/25" />
-
-          <button
-            type="button"
-            onClick={closeBanner}
-            className="fixed right-4 top-4 z-20 flex h-12 w-12 items-center justify-center rounded-full border border-white/25 bg-white/15 text-white shadow-[0_18px_42px_rgba(0,0,0,0.28)] backdrop-blur-xl transition hover:scale-105 hover:bg-white/25 sm:right-6 sm:top-6"
-            style={{ paddingTop: 'env(safe-area-inset-top)' }}
-            aria-label="Close festival banner"
+            className="relative w-full max-w-[920px] overflow-hidden rounded-[24px] border border-[#f6d878]/45 bg-[#120b07] shadow-[0_28px_90px_rgba(0,0,0,0.42)]"
+            initial={{ opacity: 0, y: 28, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 18, scale: 0.98 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            <X size={21} />
-          </button>
-
-          <div className="relative z-10 flex min-h-screen items-end px-5 pb-24 pt-20 sm:px-8 md:items-center md:pb-16 lg:px-14">
-            <motion.div
-              initial={{ opacity: 0, y: 34 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.18, duration: 0.7 }}
-              className="max-w-xl pb-[env(safe-area-inset-bottom)]"
+            <button
+              type="button"
+              onClick={closeBanner}
+              className="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-black/35 text-white shadow-[0_12px_28px_rgba(0,0,0,0.24)] backdrop-blur-xl transition hover:scale-105 hover:bg-black/50"
+              aria-label="Close festival banner"
             >
-              <span className="inline-flex rounded-full border border-[#f6d878]/40 bg-black/30 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-[#f6d878] backdrop-blur-md">
-                Festival Edit
-              </span>
-              <h1 className="mt-5 font-heading text-[3.2rem] leading-[0.9] text-white sm:text-6xl md:text-7xl">
-                {activeBanner.title}
-              </h1>
-              <p className="mt-5 max-w-md text-sm leading-7 text-white/78 sm:text-base">
-                {activeBanner.subtitle}
-              </p>
-              <Link
-                to={activeBanner.redirectUrl || '/collections'}
-                onClick={closeBanner}
-                className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#fffaf0] px-6 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-primary shadow-[0_18px_46px_rgba(246,216,120,0.22)] transition hover:bg-[#f6d878]"
-              >
-                Explore Offers
-                <ArrowRight size={16} />
-              </Link>
-            </motion.div>
-          </div>
+              <X size={19} />
+            </button>
+
+            <Link to={activeBanner.redirectUrl || '/collections'} onClick={closeBanner} className="block">
+              <div className="relative max-h-[52vh] min-h-[300px] overflow-hidden md:min-h-[360px]">
+                <img
+                  src={imageUrl}
+                  alt={activeBanner.title}
+                  className="h-full max-h-[52vh] min-h-[300px] w-full object-contain md:min-h-[360px]"
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent p-5 md:p-7">
+                  <span className="inline-flex rounded-full border border-[#f6d878]/40 bg-black/30 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#f6d878] backdrop-blur-md">
+                    Festival Poster
+                  </span>
+                  <h1 className="mt-4 font-heading text-4xl leading-none text-white md:text-5xl">
+                    {activeBanner.title}
+                  </h1>
+                  <p className="mt-3 max-w-lg text-sm leading-6 text-white/78">
+                    {activeBanner.subtitle}
+                  </p>
+                  <span className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#fffaf0] px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-primary shadow-[0_18px_46px_rgba(246,216,120,0.22)]">
+                    Explore Offers
+                    <ArrowRight size={15} />
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </motion.div>
         </motion.section>
       ) : null}
     </AnimatePresence>

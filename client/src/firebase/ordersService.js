@@ -151,3 +151,24 @@ export async function updateOrderStatus(orderId, status) {
     return true;
   }
 }
+
+export async function updateOrder(orderId, patch) {
+  try {
+    return normalizeOrder(await ordersApi.update(orderId, patch));
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('Falling back to local order update.', error);
+    }
+    const orders = readLocalOrders().map((order) =>
+      order.id === orderId
+        ? normalizeOrder({
+            ...order,
+            ...patch,
+            updatedAt: new Date().toISOString(),
+          })
+        : order,
+    );
+    writeLocalOrders(orders);
+    return orders.find((order) => order.id === orderId) || true;
+  }
+}

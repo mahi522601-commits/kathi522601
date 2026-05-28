@@ -100,6 +100,7 @@ export default function Footer() {
               <YoutubeIcon />
             </a>
           </div>
+          <p>Website made by WayzenTech 9398724704</p>
           <p>&copy; 2025, KHYATHI COLLECTIONS</p>
         </div>
       </div>

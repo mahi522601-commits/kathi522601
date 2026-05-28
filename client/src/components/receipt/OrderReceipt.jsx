@@ -209,6 +209,24 @@ export default function OrderReceipt({
           </div>
         </div>
 
+        {order.rewardCoupon?.code ? (
+          <section className="px-5 pb-6 md:px-8">
+            <div className="rounded-[18px] border border-[#ead7a2] bg-[#fff6da] p-5 text-primary">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-dark">Thank-you coupon</p>
+              <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="font-heading text-3xl">{order.rewardCoupon.code}</p>
+                  <p className="mt-1 text-sm text-body">
+                    Use this {order.rewardCoupon.discount}% off coupon within 1 month.
+                    Expires on {order.rewardCoupon.expiresAt}.
+                  </p>
+                </div>
+                <StatusBadge>Single use</StatusBadge>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
         <section className="px-5 pb-6 md:px-8">
           <div className="overflow-hidden rounded-[18px] border border-[#ead7a2] bg-white">
             <div className="hidden grid-cols-[1.3fr_0.7fr_0.4fr_0.6fr_0.7fr] gap-3 bg-[#f5ebd8] px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-primary md:grid">

@@ -19,17 +19,17 @@ function BannerPreview({ banner, mode = 'mobile' }) {
   const imageUrl = resolveBannerImage(banner.image);
   const frameClass =
     mode === 'mobile'
-      ? 'mx-auto h-[460px] max-w-[240px] rounded-[30px]'
-      : 'h-[260px] w-full rounded-[22px]';
+      ? 'mx-auto h-[300px] max-w-[240px] rounded-[22px]'
+      : 'h-[220px] w-full rounded-[18px]';
 
   return (
     <div className={`relative overflow-hidden border border-[#ead7a2] bg-[#120b07] shadow-[0_18px_48px_rgba(42,29,16,0.16)] ${frameClass}`}>
       {imageUrl ? (
-        <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-contain" />
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-[#1c120a] to-[#6f5428]" />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/25" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/10" />
       <div className="absolute inset-x-0 bottom-0 p-5 text-white">
         <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#f6d878]">Festival Banner</p>
         <h4 className="mt-2 font-heading text-3xl leading-none">{banner.title || 'Banner title'}</h4>
@@ -154,11 +154,11 @@ export default function FestivalBannersManager() {
           <div>
             <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-[#f6d878]">
               <CalendarClock size={14} />
-              Festival Banner Management
+              Poster Banner Management
             </p>
-            <h1 className="mt-3 font-heading text-5xl text-white">Fullscreen Festival Banners</h1>
+            <h1 className="mt-3 font-heading text-5xl text-white">Poster Festival Banners</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[#d8c6aa]">
-              Upload cinematic fullscreen banners, schedule start and end dates, preview mobile and desktop frames, and let the storefront auto activate them.
+              Upload poster-style banners, schedule start and end dates, preview mobile and desktop frames, and let the storefront auto activate them.
             </p>
           </div>
           <button type="button" className="action-button gap-2" onClick={handleSave} disabled={saving}>
@@ -209,7 +209,7 @@ export default function FestivalBannersManager() {
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <h2 className="font-heading text-3xl">Scheduled Banners</h2>
-            <p className="text-sm text-muted">First active scheduled banner appears fullscreen on the storefront.</p>
+            <p className="text-sm text-muted">First active scheduled banner appears as a half-screen poster on the storefront.</p>
           </div>
           <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white">
             {settings?.festivalBanners?.length || 0} banners

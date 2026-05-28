@@ -85,6 +85,12 @@
     },
 
     {
+      label: 'Home',
+      path: '/',
+      key: 'home',
+    },
+
+    {
       label: 'Search',
       path: '/search',
       key: 'search',
