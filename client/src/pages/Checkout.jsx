@@ -6,9 +6,9 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../hooks/useCart';
-import { incrementCouponUsage, validateCoupon } from '../firebase/couponService';
+import { validateCoupon } from '../firebase/couponService';
 import { placeOrder } from '../firebase/ordersService';
-import { uploadProductImages } from '../firebase/storageService';
+import { uploadPaymentScreenshot } from '../firebase/storageService';
 import { formatPrice } from '../utils/formatPrice';
 import { indianStates } from '../utils/indianCities';
 import { siteConfig } from '../config/site';
@@ -175,8 +175,8 @@ export default function Checkout() {
 
     setSaving(true);
     try {
-      const [uploadedProof] = await uploadProductImages(
-        [paymentScreenshot],
+      const uploadedProof = await uploadPaymentScreenshot(
+        paymentScreenshot,
         `payment-proof-${form.phone || Date.now()}`,
       );
       const proofUrl = resolveImageUrl(uploadedProof);
@@ -191,14 +191,6 @@ export default function Checkout() {
           paymentScreenshotUrl: proofUrl,
         }),
       );
-
-      if (coupon?.code) {
-        try {
-          await incrementCouponUsage(coupon.code);
-        } catch {
-          // Checkout should not fail if coupon usage sync is delayed.
-        }
-      }
 
       if (userProfile?.uid) {
         try {

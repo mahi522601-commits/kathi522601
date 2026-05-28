@@ -23,3 +23,12 @@ export async function uploadProductImages(files, productName = 'product') {
 
   return uploadApi.uploadMultiple(prepared, productName);
 }
+
+export async function uploadPaymentScreenshot(file, name = 'payment-proof') {
+  if (!file) {
+    return null;
+  }
+
+  const base64 = await fileToBase64(file);
+  return uploadApi.uploadPaymentProof(base64, `${name}-${Date.now()}`);
+}

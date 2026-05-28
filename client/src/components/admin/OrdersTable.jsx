@@ -1,5 +1,5 @@
 ﻿import { useMemo, useState } from 'react';
-import { Download, X } from 'lucide-react';
+import { Download, Eye, X } from 'lucide-react';
 import OrderReceipt from '../receipt/OrderReceipt';
 import { formatPrice } from '../../utils/formatPrice';
 
@@ -67,9 +67,32 @@ function exportOrdersCsv(orders) {
   URL.revokeObjectURL(url);
 }
 
+function imageUrl(image) {
+  if (!image) {
+    return '';
+  }
+
+  if (typeof image === 'string') {
+    return image;
+  }
+
+  return image.displayUrl || image.url || image.thumbnail || '';
+}
+
+function downloadImage(url, orderNumber) {
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${orderNumber || 'order'}-payment-proof.jpg`;
+  link.target = '_blank';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
 export default function OrdersTable({ orders, loading = false, savingOrderId = '', onSaveStatus }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [receiptOrder, setReceiptOrder] = useState(null);
+  const [proofPreview, setProofPreview] = useState(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
@@ -133,13 +156,14 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                 <th className="px-4 py-4 font-semibold">Total</th>
                 <th className="px-4 py-4 font-semibold">Payment</th>
                 <th className="px-4 py-4 font-semibold">Status</th>
+                <th className="px-4 py-4 font-semibold">Proof</th>
                 <th className="px-4 py-4 font-semibold">Receipt</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="px-4 py-8 text-center text-muted" colSpan={7}>
+                  <td className="px-4 py-8 text-center text-muted" colSpan={8}>
                     Loading orders...
                   </td>
                 </tr>
@@ -153,6 +177,23 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                   <td className="px-4 py-4">{order.customerName}</td>
                   <td className="px-4 py-4">{new Date(order.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-4">{formatPrice(order.total)}</td>
+                  <td className="px-4 py-4">
+                    {imageUrl(order.paymentScreenshot || order.paymentScreenshotUrl) ? (
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 rounded-full border border-borderwarm px-3 py-2 text-xs font-semibold text-primary"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setProofPreview(order);
+                        }}
+                      >
+                        <Eye size={14} />
+                        View
+                      </button>
+                    ) : (
+                      <span className="text-xs text-muted">None</span>
+                    )}
+                  </td>
                   <td className="px-4 py-4">
                     <PaymentBadge status={order.paymentStatus} />
                   </td>
@@ -177,7 +218,7 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                 </tr>
               )) : (
                 <tr>
-                  <td className="px-4 py-8 text-center text-muted" colSpan={7}>
+                  <td className="px-4 py-8 text-center text-muted" colSpan={8}>
                     No orders found.
                   </td>
                 </tr>
@@ -259,6 +300,73 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                 </p>
               </div>
             </div>
+            <div className="lg:col-span-2">
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Payment Screenshot</p>
+              {imageUrl(selectedOrder.paymentScreenshot || selectedOrder.paymentScreenshotUrl) ? (
+                <div className="mt-3 grid gap-4 rounded-[1.2rem] bg-cream p-4 sm:grid-cols-[160px_1fr]">
+                  <img
+                    src={imageUrl(selectedOrder.paymentScreenshot || selectedOrder.paymentScreenshotUrl)}
+                    alt={`Payment proof for ${selectedOrder.orderNumber}`}
+                    className="h-44 w-full rounded-xl object-contain sm:h-40"
+                    loading="lazy"
+                  />
+                  <div className="flex flex-col justify-center gap-3">
+                    <p className="text-sm text-body">
+                      Uploaded payment proof for admin verification.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" className="action-button-outline px-4 py-2 text-xs" onClick={() => setProofPreview(selectedOrder)}>
+                        Preview
+                      </button>
+                      <button
+                        type="button"
+                        className="action-button px-4 py-2 text-xs"
+                        onClick={() => downloadImage(imageUrl(selectedOrder.paymentScreenshot || selectedOrder.paymentScreenshotUrl), selectedOrder.orderNumber)}
+                      >
+                        Download
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-3 rounded-[1.2rem] bg-cream p-4 text-sm text-muted">
+                  No payment screenshot uploaded for this order.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {proofPreview ? (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm">
+          <div className="w-full max-w-3xl rounded-[1.4rem] bg-white p-4 shadow-2xl">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="font-semibold text-primary">{proofPreview.orderNumber} payment proof</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-borderwarm text-primary"
+                  onClick={() => downloadImage(imageUrl(proofPreview.paymentScreenshot || proofPreview.paymentScreenshotUrl), proofPreview.orderNumber)}
+                  aria-label="Download payment proof"
+                >
+                  <Download size={16} />
+                </button>
+                <button
+                  type="button"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-borderwarm text-primary"
+                  onClick={() => setProofPreview(null)}
+                  aria-label="Close payment proof"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+            <img
+              src={imageUrl(proofPreview.paymentScreenshot || proofPreview.paymentScreenshotUrl)}
+              alt={`Payment proof for ${proofPreview.orderNumber}`}
+              className="max-h-[78vh] w-full rounded-[1rem] object-contain"
+            />
           </div>
         </div>
       ) : null}

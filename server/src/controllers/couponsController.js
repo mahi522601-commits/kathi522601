@@ -1,8 +1,13 @@
-﻿import { createDocument, deleteDocument, getDocument, listDocuments, updateDocument } from '../services/firestore.js';
+import { createDocument, deleteDocument, getDocument, listDocuments, updateDocument } from '../services/firestore.js';
+import {
+  normalizeCouponCode,
+  sanitizeCoupon,
+  validateCouponForSubtotal,
+} from '../services/coupons.js';
 
 export async function getCoupons(req, res, next) {
   try {
-    const coupons = await listDocuments('coupons');
+    const coupons = (await listDocuments('coupons')).map((coupon) => sanitizeCoupon(coupon));
     res.json({ success: true, coupons });
   } catch (error) {
     next(error);
@@ -11,30 +16,16 @@ export async function getCoupons(req, res, next) {
 
 export async function validateCoupon(req, res, next) {
   try {
-    const code = (req.body.code || '').toUpperCase().trim();
+    const code = normalizeCouponCode(req.body.code);
     const subtotal = Number(req.body.subtotal || 0);
-    const coupon = await getDocument('coupons', code);
+    const coupon = sanitizeCoupon(await getDocument('coupons', code));
+    const validation = validateCouponForSubtotal(coupon, subtotal);
 
-    if (!coupon || !coupon.active) {
-      return res.status(404).json({ success: false, error: 'Invalid coupon code' });
+    if (!validation.valid) {
+      return res.status(validation.status).json({ success: false, error: validation.error });
     }
 
-    if (coupon.minOrderValue && subtotal < coupon.minOrderValue) {
-      return res
-        .status(400)
-        .json({ success: false, error: `Coupon valid on orders above Rs. ${coupon.minOrderValue}` });
-    }
-
-    if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
-      return res.status(400).json({ success: false, error: 'Coupon has expired' });
-    }
-
-    if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) {
-      return res.status(400).json({ success: false, error: 'Coupon usage limit reached' });
-    }
-
-    const discountAmount = Math.round((subtotal * coupon.discount) / 100);
-    res.json({ success: true, coupon: { ...coupon, discountAmount } });
+    res.json({ success: true, coupon: { ...coupon, discountAmount: validation.discountAmount } });
   } catch (error) {
     next(error);
   }
@@ -42,11 +33,16 @@ export async function validateCoupon(req, res, next) {
 
 export async function createCoupon(req, res, next) {
   try {
-    const payload = {
-      ...req.body,
-      code: req.body.code.toUpperCase(),
-      active: req.body.active ?? true,
-    };
+    const payload = sanitizeCoupon(req.body, { createdAt: new Date().toISOString() });
+    if (!payload.code) {
+      return res.status(400).json({ success: false, error: 'Coupon code is required' });
+    }
+
+    const existingCoupon = await getDocument('coupons', payload.code);
+    if (existingCoupon) {
+      return res.status(409).json({ success: false, error: 'Coupon code already exists' });
+    }
+
     const coupon = await createDocument('coupons', payload, payload.code);
     res.status(201).json({ success: true, coupon });
   } catch (error) {
@@ -56,15 +52,14 @@ export async function createCoupon(req, res, next) {
 
 export async function updateCoupon(req, res, next) {
   try {
-    const coupon = await updateDocument('coupons', req.params.code.toUpperCase(), {
-      ...req.body,
-      code: req.params.code.toUpperCase(),
-    });
+    const code = normalizeCouponCode(req.params.code);
+    const existingCoupon = await getDocument('coupons', code);
 
-    if (!coupon) {
+    if (!existingCoupon) {
       return res.status(404).json({ success: false, error: 'Coupon not found' });
     }
 
+    const coupon = await updateDocument('coupons', code, sanitizeCoupon(req.body, existingCoupon));
     res.json({ success: true, coupon });
   } catch (error) {
     next(error);
@@ -73,7 +68,7 @@ export async function updateCoupon(req, res, next) {
 
 export async function removeCoupon(req, res, next) {
   try {
-    await deleteDocument('coupons', req.params.code.toUpperCase());
+    await deleteDocument('coupons', normalizeCouponCode(req.params.code));
     res.json({ success: true });
   } catch (error) {
     next(error);

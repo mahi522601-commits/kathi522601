@@ -34,3 +34,17 @@
     overflow: hidden;
   }
 }
+
+@keyframes premium-loader {
+  0% {
+    transform: translateX(-110%);
+  }
+
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+.animate-premium-loader {
+  animation: premium-loader 1.15s ease-in-out infinite;
+}

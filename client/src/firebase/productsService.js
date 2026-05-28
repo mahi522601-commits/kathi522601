@@ -39,6 +39,23 @@ function normalizeImages(images = []) {
   });
 }
 
+function normalizeColors(colors = []) {
+  const normalized = (Array.isArray(colors) ? colors : [])
+    .map((color) => {
+      if (typeof color === 'string') {
+        return { name: color.trim(), hex: '#000000' };
+      }
+
+      return {
+        name: String(color?.name || '').trim(),
+        hex: /^#[0-9a-f]{6}$/i.test(color?.hex || '') ? color.hex : '#000000',
+      };
+    })
+    .filter((color) => color.name);
+
+  return normalized.length ? normalized : [{ name: 'Default', hex: '#000000' }];
+}
+
 function normalizeProduct(product, index = 0) {
   const salePrice = Number(product.salePrice || 0);
   const originalPrice = Number(product.originalPrice || salePrice || 0);
@@ -57,7 +74,7 @@ function normalizeProduct(product, index = 0) {
     discountPercent:
       product.discountPercent ||
       Math.round(((originalPrice - salePrice) / Math.max(originalPrice, 1)) * 100),
-    colors: product.colors || [],
+    colors: normalizeColors(product.colors),
     imageObjects,
     images: imageObjects.map((image) => image.displayUrl),
     thumbnails: imageObjects.map((image) => image.thumbnail),
@@ -195,6 +212,7 @@ export async function getNewArrivals(limitCount = 8) {
 export async function saveProduct(product) {
   const payload = {
     ...product,
+    colors: normalizeColors(product.colors),
     images: (product.imageObjects || normalizeImages(product.images || [])).map((image) => ({
       id: image.id || image.url || image.displayUrl || image,
       url: image.url || image.displayUrl || image.thumbnail || image,

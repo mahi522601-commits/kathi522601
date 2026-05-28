@@ -34,7 +34,7 @@ function normalizeColors(colors) {
         hex: /^#[0-9a-f]{6}$/i.test(color.hex || '') ? color.hex : '#000000',
       };
     })
-    .filter((color) => color.name.trim() || color.hex);
+    .filter((color) => color.name.trim());
 }
 
 export default function ProductForm({ product, onSave, onCancel, saving = false }) {
@@ -155,10 +155,13 @@ export default function ProductForm({ product, onSave, onCancel, saving = false 
                 type="button"
                 className="rounded-full border border-borderwarm px-3 py-3 text-sm text-maroon"
                 onClick={() =>
-                  setForm((current) => ({
-                    ...current,
-                    colors: current.colors.filter((_, colorIndex) => colorIndex !== index),
-                  }))
+                  setForm((current) => {
+                    const nextColors = current.colors.filter((_, colorIndex) => colorIndex !== index);
+                    return {
+                      ...current,
+                      colors: nextColors.length ? nextColors : [{ name: '', hex: '#000000' }],
+                    };
+                  })
                 }
               >
                 Remove

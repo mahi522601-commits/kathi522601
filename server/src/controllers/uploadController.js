@@ -14,6 +14,20 @@ export async function uploadImage(req, res, next) {
   }
 }
 
+export async function uploadPaymentProof(req, res, next) {
+  try {
+    const { base64, name } = req.body;
+    if (!base64) {
+      return res.status(400).json({ success: false, error: 'No payment screenshot provided' });
+    }
+
+    const image = await uploadToImgBB(base64, name || `payment-proof-${Date.now()}`);
+    res.status(201).json({ success: true, image });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function uploadMultipleImages(req, res, next) {
   try {
     const { images, productName } = req.body;

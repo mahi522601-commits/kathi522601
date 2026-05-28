@@ -6,7 +6,7 @@ import { getSiteSettings, fallbackSiteSettings } from '../../firebase/settingsSe
 import { useProducts } from '../../hooks/useProducts';
 import { formatPrice } from '../../utils/formatPrice';
 
-const AUTO_SLIDE_MS = 2000;
+const AUTO_SLIDE_MS = 4500;
 
 function resolveImageUrl(image) {
   if (!image) {
@@ -164,7 +164,7 @@ export default function HeroSection() {
   return (
     <section
       className="relative overflow-hidden bg-[#f8f1e6] text-primary"
-      style={{ minHeight: 'min(96vh, 900px)' }}
+      style={{ minHeight: 'min(86vh, 820px)' }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -187,7 +187,7 @@ export default function HeroSection() {
         </AnimatePresence>
       </div>
 
-      <div className="relative z-10 page-shell flex min-h-[min(96vh,900px)] items-center py-16 lg:py-20">
+      <div className="relative z-10 page-shell flex min-h-[min(86vh,820px)] items-center py-14 lg:py-16">
         <div className="grid w-full items-center gap-10 lg:grid-cols-[minmax(230px,0.72fr)_minmax(360px,0.9fr)_minmax(220px,0.62fr)] xl:grid-cols-[minmax(280px,0.72fr)_minmax(460px,0.9fr)_minmax(260px,0.62fr)]">
           <div className="order-2 max-w-[560px] lg:order-1">
             <AnimatePresence mode="wait">
@@ -273,7 +273,7 @@ export default function HeroSection() {
           </div>
 
           <div className="order-1 mx-auto w-full max-w-[560px] lg:order-2">
-            <div className="relative min-h-[460px] overflow-hidden rounded-t-[18rem] border border-gold/40 bg-[#fffaf1] shadow-[0_28px_80px_rgba(28,18,10,0.18)] sm:min-h-[620px] lg:min-h-[710px]">
+            <div className="relative aspect-[3/4] min-h-[410px] overflow-hidden rounded-t-[16rem] border border-gold/40 bg-[#fffaf1] shadow-[0_28px_80px_rgba(28,18,10,0.18)] sm:min-h-[560px] lg:min-h-[640px]">
               <AnimatePresence mode="wait" custom={direction}>
                 <motion.img
                   key={`frame-${activeIndex}`}
@@ -303,7 +303,7 @@ export default function HeroSection() {
                   {activeSlide.category}
                 </p>
                 <p className="mt-3 max-w-[260px] text-sm leading-6 text-body">
-                  Fresh picks change automatically every two seconds for a quick boutique preview.
+                  Fresh picks rotate smoothly with image-safe fitting for every screen size.
                 </p>
               </div>
 
@@ -352,6 +352,17 @@ export default function HeroSection() {
       </div>
 
       <div className="absolute inset-x-0 bottom-0 z-10">
+        <div className="overflow-hidden border-y border-gold/25 bg-[#1c120a] py-2 text-[#fffaf0]">
+          <motion.div
+            className="flex min-w-max gap-10 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.24em]"
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
+          >
+            {Array.from({ length: 6 }).map((_, index) => (
+              <span key={index}>Website Designed by WayZenTech - 9398724704</span>
+            ))}
+          </motion.div>
+        </div>
         <div className="h-1 bg-primary/10">
           <motion.div
             className="h-full bg-gold"

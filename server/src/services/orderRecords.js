@@ -1,4 +1,9 @@
 import { createDocument, getDocument, listDocuments, updateDocument } from './firestore.js';
+import {
+  normalizeCouponCode,
+  sanitizeCoupon,
+  validateCouponForSubtotal,
+} from './coupons.js';
 
 function buildOrderNumber(orderCount) {
   return `KC-${new Date().getFullYear()}-${String(orderCount + 1).padStart(4, '0')}`;
@@ -28,8 +33,43 @@ export async function createStoredOrder(payload) {
   const orders = await listDocuments('orders');
   const createdAt = payload.createdAt || new Date().toISOString();
   const initialStatus = payload.status || 'Pending';
+  const subtotal = Number(payload.subtotal ?? payload.pricing?.subtotal ?? 0);
+  const couponCode = normalizeCouponCode(payload.couponCode || payload.pricing?.couponCode);
+  let couponPatch = null;
+  let verifiedDiscount = Number(payload.discount ?? payload.pricing?.discount ?? 0);
+
+  if (couponCode) {
+    const usedCoupon = sanitizeCoupon(await getDocument('coupons', couponCode));
+    const validation = validateCouponForSubtotal(usedCoupon, subtotal);
+    if (!validation.valid) {
+      const error = new Error(validation.error);
+      error.status = validation.status;
+      throw error;
+    }
+
+    verifiedDiscount = validation.discountAmount;
+    couponPatch = {
+      code: usedCoupon.code || couponCode,
+      usedCount: Number(usedCoupon.usedCount || 0) + 1,
+    };
+  }
+
+  const normalizedPayload = {
+    ...payload,
+    couponCode: couponCode || null,
+    discount: verifiedDiscount,
+    total: couponCode ? Math.max(0, subtotal - verifiedDiscount) : payload.total,
+    pricing: {
+      ...(payload.pricing || {}),
+      subtotal,
+      discount: verifiedDiscount,
+      couponCode: couponCode || null,
+      shipping: Number(payload.pricing?.shipping || payload.shippingCharge || 0),
+      total: couponCode ? Math.max(0, subtotal - verifiedDiscount) : Number(payload.total || 0),
+    },
+  };
   const receiptNumber = payload.receiptNumber || buildReceiptNumber(orders.length);
-  const shouldCreateRewardCoupon = Array.isArray(payload.items) && payload.items.length > 0;
+  const shouldCreateRewardCoupon = Array.isArray(normalizedPayload.items) && normalizedPayload.items.length > 0;
   const rewardCoupon = shouldCreateRewardCoupon
     ? {
         code: buildRewardCouponCode(orders.length),
@@ -39,8 +79,8 @@ export async function createStoredOrder(payload) {
         usedCount: 0,
         expiresAt: addMonths(createdAt, 1),
         active: true,
-        customerEmail: payload.email || '',
-        customerName: payload.customerName || '',
+        customerEmail: normalizedPayload.email || '',
+        customerName: normalizedPayload.customerName || '',
         source: 'post-purchase',
       }
     : null;
@@ -49,24 +89,23 @@ export async function createStoredOrder(payload) {
     await createDocument('coupons', rewardCoupon, rewardCoupon.code);
   }
 
-  if (payload.couponCode) {
-    const usedCoupon = await getDocument('coupons', String(payload.couponCode).toUpperCase());
-    if (usedCoupon) {
-      await updateDocument('coupons', usedCoupon.code || usedCoupon.id, {
-        usedCount: Number(usedCoupon.usedCount || 0) + 1,
-      });
-    }
+  if (couponPatch) {
+    await updateDocument('coupons', couponPatch.code, { usedCount: couponPatch.usedCount });
   }
 
   return createDocument('orders', {
-    ...payload,
-    orderNumber: payload.orderNumber || buildOrderNumber(orders.length),
+    ...normalizedPayload,
+    orderNumber: normalizedPayload.orderNumber || buildOrderNumber(orders.length),
     receiptNumber,
-    transactionId: payload.transactionId || payload.paymentId || payload.gatewayOrderId || receiptNumber,
+    transactionId:
+      normalizedPayload.transactionId ||
+      normalizedPayload.paymentId ||
+      normalizedPayload.gatewayOrderId ||
+      receiptNumber,
     status: initialStatus,
-    deliveryStatus: payload.deliveryStatus || initialStatus,
-    expectedDeliveryAt: payload.expectedDeliveryAt || addDays(createdAt, 5),
-    statusHistory: payload.statusHistory || [
+    deliveryStatus: normalizedPayload.deliveryStatus || initialStatus,
+    expectedDeliveryAt: normalizedPayload.expectedDeliveryAt || addDays(createdAt, 5),
+    statusHistory: normalizedPayload.statusHistory || [
       {
         status: initialStatus,
         label: initialStatus === 'Pending' ? 'Order placed' : 'Order confirmed',
@@ -74,13 +113,13 @@ export async function createStoredOrder(payload) {
       },
     ],
     receipt: {
-      id: payload.receipt?.id || receiptNumber,
-      generatedAt: payload.receipt?.generatedAt || createdAt,
+      id: normalizedPayload.receipt?.id || receiptNumber,
+      generatedAt: normalizedPayload.receipt?.generatedAt || createdAt,
       storeName: 'Khyathi Collections',
       storeLocation: 'Narasaropet',
       storePhone: '93921 73693',
       expectedDeliveryText: 'Expected Delivery Within 5 Days',
-      ...(payload.receipt || {}),
+      ...(normalizedPayload.receipt || {}),
     },
     rewardCoupon,
     createdAt,

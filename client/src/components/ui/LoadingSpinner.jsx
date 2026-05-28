@@ -1,10 +1,22 @@
-﻿export default function LoadingSpinner({ label = 'Loading...' }) {
+export default function LoadingSpinner({ label = 'Loading...' }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white">
-      <div className="flex flex-col items-center gap-4">
-        <div className="h-14 w-14 animate-spin rounded-full border-4 border-gray-300 border-t-black"></div>
-
-        <p className="text-lg font-semibold text-black">
+    <div className="flex min-h-screen items-center justify-center bg-[#fffaf0] px-4">
+      <div className="relative flex flex-col items-center gap-5">
+        <div className="relative flex h-28 w-28 items-center justify-center">
+          <div className="absolute inset-0 rounded-full border border-gold/25" />
+          <div className="absolute inset-2 rounded-full border-2 border-transparent border-r-maroon border-t-gold motion-safe:animate-spin" />
+          <div className="absolute inset-5 rounded-full bg-white shadow-[0_16px_45px_rgba(28,18,10,0.14)]" />
+          <img
+            src="/logo.png"
+            alt="Khyathi Collections"
+            className="relative h-16 w-16 object-contain"
+            decoding="async"
+          />
+        </div>
+        <div className="h-1 w-36 overflow-hidden rounded-full bg-[#eadfca]">
+          <div className="h-full w-1/2 rounded-full bg-gradient-to-r from-gold via-maroon to-gold motion-safe:animate-premium-loader" />
+        </div>
+        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">
           {label}
         </p>
       </div>

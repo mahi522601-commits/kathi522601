@@ -4,6 +4,19 @@ import toast from 'react-hot-toast';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import CouponForm from '../../components/admin/CouponForm';
 import { deleteCoupon, getCoupons, saveCoupon } from '../../firebase/couponService';
+import { formatPrice } from '../../utils/formatPrice';
+
+function formatCouponExpiry(value) {
+  if (!value) {
+    return 'No expiry';
+  }
+
+  return new Date(value).toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
 
 export default function AdminCoupons() {
   const [coupons, setCoupons] = useState([]);
@@ -103,8 +116,8 @@ export default function AdminCoupons() {
                       <tr key={coupon.code} className="border-t border-borderwarm">
                         <td className="px-4 py-4 font-semibold text-primary">{coupon.code}</td>
                         <td className="px-4 py-4">{coupon.discount}%</td>
-                        <td className="px-4 py-4">{coupon.minOrderValue}</td>
-                        <td className="px-4 py-4">{coupon.expiresAt}</td>
+                        <td className="px-4 py-4">{formatPrice(coupon.minOrderValue || 0)}</td>
+                        <td className="px-4 py-4">{formatCouponExpiry(coupon.expiresAt)}</td>
                         <td className="px-4 py-4">{coupon.active ? 'Yes' : 'No'}</td>
                         <td className="px-4 py-4">
                           <div className="flex gap-2">

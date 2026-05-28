@@ -14,6 +14,7 @@ export default function ImageViewer({ images, initialIndex = 0, onClose }) {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [touchStart, setTouchStart] = useState(null);
   const swipedRef = useRef(false);
+  const pinchRef = useRef(null);
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -63,6 +64,20 @@ export default function ImageViewer({ images, initialIndex = 0, onClose }) {
   const next = () => setCurrentIndex((index) => (index + 1) % images.length);
 
   const handleTouchStart = (event) => {
+    if (event.touches.length === 2) {
+      const [first, second] = event.touches;
+      const distance = Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
+      pinchRef.current = {
+        distance,
+        zoom,
+        centerX: (first.clientX + second.clientX) / 2,
+        centerY: (first.clientY + second.clientY) / 2,
+      };
+      setTouchStart(null);
+      swipedRef.current = true;
+      return;
+    }
+
     const touch = event.touches[0];
     setTouchStart({
       x: touch.clientX,
@@ -74,6 +89,15 @@ export default function ImageViewer({ images, initialIndex = 0, onClose }) {
   };
 
   const handleTouchMove = (event) => {
+    if (event.touches.length === 2 && pinchRef.current) {
+      event.preventDefault();
+      const [first, second] = event.touches;
+      const distance = Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
+      const nextZoom = Math.min(Math.max(1, pinchRef.current.zoom * (distance / pinchRef.current.distance)), 5);
+      setZoom(nextZoom);
+      return;
+    }
+
     if (!touchStart) {
       return;
     }
@@ -94,6 +118,10 @@ export default function ImageViewer({ images, initialIndex = 0, onClose }) {
   };
 
   const handleTouchEnd = (event) => {
+    if (event.touches.length < 2) {
+      pinchRef.current = null;
+    }
+
     if (!touchStart) {
       return;
     }
@@ -164,13 +192,17 @@ export default function ImageViewer({ images, initialIndex = 0, onClose }) {
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          style={{ touchAction: zoom > 1 ? 'none' : 'pan-y' }}
+          style={{ touchAction: 'none' }}
           onClick={() => {
             if (swipedRef.current) {
               swipedRef.current = false;
               return;
             }
-            if (zoom === 1) handleZoomIn();
+            if (zoom === 1) {
+              setZoom(2.2);
+            } else {
+              handleReset();
+            }
           }}
         >
           <AnimatePresence mode="wait">

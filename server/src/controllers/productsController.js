@@ -17,6 +17,32 @@ function sortProducts(products, sort) {
   }
 }
 
+function normalizeColors(colors = []) {
+  const normalized = (Array.isArray(colors) ? colors : [])
+    .map((color) => {
+      if (typeof color === 'string') {
+        return { name: color.trim(), hex: '#000000' };
+      }
+
+      return {
+        name: String(color?.name || '').trim(),
+        hex: /^#[0-9a-f]{6}$/i.test(color?.hex || '') ? color.hex : '#000000',
+      };
+    })
+    .filter((color) => color.name);
+
+  return normalized.length ? normalized : [{ name: 'Default', hex: '#000000' }];
+}
+
+function normalizeProductPayload(payload) {
+  return {
+    ...payload,
+    colors: normalizeColors(payload.colors),
+    originalPrice: Number(payload.originalPrice || 0),
+    salePrice: Number(payload.salePrice || 0),
+  };
+}
+
 export async function getProducts(req, res, next) {
   try {
     const { category, search, featured, newArrivals, sort } = req.query;
@@ -69,7 +95,7 @@ export async function getProduct(req, res, next) {
 export async function createProduct(req, res, next) {
   try {
     const payload = {
-      ...req.body,
+      ...normalizeProductPayload(req.body),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -87,7 +113,8 @@ export async function updateProduct(req, res, next) {
       return res.status(404).json({ success: false, error: 'Product not found' });
     }
 
-    const nextImages = Array.isArray(req.body.images) ? req.body.images : [];
+    const payload = normalizeProductPayload(req.body);
+    const nextImages = Array.isArray(payload.images) ? payload.images : [];
     const nextImageKeys = new Set(
       nextImages.map((image) => image?.id || image?.url || image?.displayUrl || image).filter(Boolean),
     );
@@ -96,7 +123,7 @@ export async function updateProduct(req, res, next) {
       return key && !nextImageKeys.has(key);
     });
 
-    const product = await updateDocument('products', req.params.id, req.body);
+    const product = await updateDocument('products', req.params.id, payload);
 
     if (!product) {
       return res.status(404).json({ success: false, error: 'Product not found' });
