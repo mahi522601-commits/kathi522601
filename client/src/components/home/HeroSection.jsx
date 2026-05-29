@@ -91,12 +91,13 @@ export default function HeroSection() {
         const product =
           products.find((entry) => entry.id === slide.productId || entry.slug === slide.productId) ||
           fallbackProduct;
+        const heroImage = product?.imageObjects?.[0] || product?.images?.[0] || slide.image;
         return {
           ...slide,
           product,
           href: slide.redirectUrl || (product ? `/product/${product.id}` : '/collections'),
-          imageUrl: resolveImageUrl(slide.image || product?.imageObjects?.[0] || product?.images?.[0]),
-          previewImageUrl: resolvePreviewImageUrl(slide.image || product?.imageObjects?.[0] || product?.images?.[0]),
+          imageUrl: resolveImageUrl(heroImage),
+          previewImageUrl: resolvePreviewImageUrl(heroImage),
           title: product?.name || slide.title || 'Khyathi Collections',
           subtitle:
             slide.subtitle ||
