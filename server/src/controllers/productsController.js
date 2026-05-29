@@ -35,11 +35,16 @@ function normalizeColors(colors = []) {
 }
 
 function normalizeProductPayload(payload) {
+  const stockQuantity = Math.max(0, Math.floor(Number(payload.stockQuantity || 0)));
+
   return {
     ...payload,
     colors: normalizeColors(payload.colors),
     originalPrice: Number(payload.originalPrice || 0),
     salePrice: Number(payload.salePrice || 0),
+    stockQuantity,
+    inStock: Boolean(payload.inStock) && stockQuantity > 0,
+    soldOut: Boolean(payload.soldOut) || stockQuantity <= 0,
   };
 }
 

@@ -26,6 +26,8 @@ export default function QuickViewModal({ open, onClose, product }) {
   }
 
   const images = product.images?.length ? product.images : ['/logo.png'];
+  const stockQuantity = Math.max(0, Math.floor(Number(product.stockQuantity || 0)));
+  const isAvailable = product.inStock && !product.soldOut && stockQuantity > 0;
 
   return (
     <AnimatePresence>
@@ -110,23 +112,27 @@ export default function QuickViewModal({ open, onClose, product }) {
                 <div className="mt-7">
                   <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">Quantity</p>
                   <div className="mt-3">
-                    <QuantitySelector value={quantity} onChange={setQuantity} />
+                    <QuantitySelector value={quantity} onChange={setQuantity} max={stockQuantity} />
                   </div>
+                  {isAvailable ? (
+                    <p className="mt-2 text-xs font-semibold text-emerald-700">{stockQuantity} available</p>
+                  ) : null}
                 </div>
 
                 <div className="mt-8 space-y-3">
                   <button
                     type="button"
                     className={`action-button w-full ${
-                      product.soldOut ? 'cursor-not-allowed bg-[#a8937b] hover:bg-[#a8937b]' : ''
+                      !isAvailable ? 'cursor-not-allowed bg-[#a8937b] hover:bg-[#a8937b]' : ''
                     }`}
                     onClick={() => {
-                      addToCart(product, selectedColor, quantity);
-                      onClose();
+                      if (addToCart(product, selectedColor, quantity)) {
+                        onClose();
+                      }
                     }}
-                    disabled={product.soldOut}
+                    disabled={!isAvailable}
                   >
-                    {product.soldOut ? 'Sold Out' : 'Add to Cart'}
+                    {isAvailable ? 'Add to Cart' : 'Sold Out'}
                   </button>
                   <Link to={`/product/${product.id}`} className="action-button-outline w-full" onClick={onClose}>
                     View Full Product

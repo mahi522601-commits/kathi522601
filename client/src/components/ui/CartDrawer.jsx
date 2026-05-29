@@ -102,6 +102,7 @@ export default function CartDrawer({ open, onClose }) {
                             <QuantitySelector
                               compact
                               value={item.qty}
+                              max={item.stockQuantity}
                               onChange={(value) => updateQuantity(item.productId, item.color, value)}
                             />
                           </div>

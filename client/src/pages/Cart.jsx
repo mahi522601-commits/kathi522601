@@ -55,7 +55,7 @@ export default function Cart() {
                       <p className="mt-3 text-sm font-semibold text-primary">{formatPrice(item.salePrice)}</p>
                     </div>
                     <div className="flex items-center gap-4 sm:flex-col sm:items-end">
-                      <QuantitySelector compact value={item.qty} onChange={(value) => updateQuantity(item.productId, item.color, value)} />
+                      <QuantitySelector compact value={item.qty} max={item.stockQuantity} onChange={(value) => updateQuantity(item.productId, item.color, value)} />
                       <button
                         type="button"
                         className="inline-flex items-center gap-2 text-sm text-muted transition hover:text-primary"

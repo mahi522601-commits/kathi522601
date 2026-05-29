@@ -10,6 +10,7 @@ const blankProduct = {
   careInstructions: '',
   originalPrice: 0,
   salePrice: 0,
+  stockQuantity: 1,
   inStock: true,
   soldOut: false,
   isFeatured: false,
@@ -47,6 +48,7 @@ export default function ProductForm({ product, onSave, onCancel, saving = false 
       product
         ? {
             ...product,
+            stockQuantity: Number(product.stockQuantity ?? 0),
             imageObjects: product.imageObjects || product.images || [],
             colors: normalizeColors(product.colors),
             tags: Array.isArray(product.tags) ? product.tags.join(', ') : product.tags || '',
@@ -96,6 +98,11 @@ export default function ProductForm({ product, onSave, onCancel, saving = false 
       return;
     }
 
+    if (Number(form.stockQuantity) < 0) {
+      setError('Stock quantity cannot be negative.');
+      return;
+    }
+
     if (!form.imageObjects?.length) {
       setError('Upload at least one product image.');
       return;
@@ -105,6 +112,7 @@ export default function ProductForm({ product, onSave, onCancel, saving = false 
       ...form,
       originalPrice: Number(form.originalPrice),
       salePrice: Number(form.salePrice),
+      stockQuantity: Math.max(0, Math.floor(Number(form.stockQuantity || 0))),
       discountPercent,
       colors: normalizeColors(form.colors).filter((color) => color.name.trim()),
       tags: form.tags
@@ -138,6 +146,7 @@ export default function ProductForm({ product, onSave, onCancel, saving = false 
         <textarea className="w-full rounded-[1.6rem] border border-borderwarm bg-white p-4 text-sm outline-none" rows="3" placeholder="Care Instructions" value={form.careInstructions} onChange={(event) => setForm({ ...form, careInstructions: event.target.value })} />
         <input type="number" className="input-shell" placeholder="Original Price" value={form.originalPrice} onChange={(event) => setForm({ ...form, originalPrice: event.target.value })} required />
         <input type="number" className="input-shell" placeholder="Sale Price" value={form.salePrice} onChange={(event) => setForm({ ...form, salePrice: event.target.value })} required />
+        <input type="number" min="0" step="1" className="input-shell" placeholder="Stock Quantity" value={form.stockQuantity} onChange={(event) => setForm({ ...form, stockQuantity: event.target.value })} required />
       </div>
 
       <div className="rounded-[1.4rem] border border-borderwarm bg-white p-5">

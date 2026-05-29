@@ -216,8 +216,10 @@ export default function AdminProducts() {
                               <p className="text-xs text-muted line-through">{formatPrice(product.originalPrice)}</p>
                             </td>
                             <td className="px-4 py-4">
-                              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${product.inStock && !product.soldOut ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                                {product.inStock && !product.soldOut ? 'In Stock' : 'Out'}
+                              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${product.inStock && !product.soldOut && Number(product.stockQuantity || 0) > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                                {product.inStock && !product.soldOut && Number(product.stockQuantity || 0) > 0
+                                  ? `${product.stockQuantity} in stock`
+                                  : 'Out'}
                               </span>
                             </td>
                             <td className="px-4 py-4">{product.isFeatured ? 'Yes' : 'No'}</td>

@@ -38,21 +38,35 @@ export function CartProvider({ children }) {
       itemCount,
       subtotal,
       addToCart(product, color, quantity = 1) {
-        if (product.soldOut || !product.inStock) {
+        const stockQuantity = Math.max(0, Math.floor(Number(product.stockQuantity || 0)));
+        const resolvedColor = color?.name || product.colors?.[0]?.name || 'Default';
+        if (product.soldOut || !product.inStock || stockQuantity <= 0) {
           toast.error('This item is sold out');
-          return;
+          return false;
+        }
+
+        const existingItem = items.find(
+          (item) => item.productId === product.id && item.color === resolvedColor,
+        );
+        const nextQty = (existingItem?.qty || 0) + quantity;
+
+        if (nextQty > stockQuantity) {
+          toast.error(`Only ${stockQuantity} in stock`);
+          return false;
         }
 
         setItems((current) => {
           const existingIndex = current.findIndex(
-            (item) => item.productId === product.id && item.color === color?.name,
+            (item) => item.productId === product.id && item.color === resolvedColor,
           );
+          const currentNextQty = (existingIndex >= 0 ? current[existingIndex].qty : 0) + quantity;
 
           if (existingIndex >= 0) {
             const next = [...current];
             next[existingIndex] = {
               ...next[existingIndex],
-              qty: next[existingIndex].qty + quantity,
+              qty: Math.min(currentNextQty, stockQuantity),
+              stockQuantity,
             };
             return next;
           }
@@ -64,25 +78,36 @@ export function CartProvider({ children }) {
               name: product.name,
               image: product.images[0],
               category: product.category,
-              color: color?.name || product.colors?.[0]?.name || 'Default',
+              color: resolvedColor,
               qty: quantity,
               salePrice: product.salePrice,
               originalPrice: product.originalPrice,
+              stockQuantity,
               slug: product.slug,
             },
           ];
         });
 
         toast.success('Added to cart');
+        return true;
       },
       updateQuantity(productId, color, qty) {
         setItems((current) =>
           current
-            .map((item) =>
-              item.productId === productId && item.color === color
-                ? { ...item, qty: Math.max(1, qty) }
-                : item,
-            )
+            .map((item) => {
+              if (item.productId !== productId || item.color !== color) {
+                return item;
+              }
+
+              const maxQty = Math.max(0, Math.floor(Number(item.stockQuantity || 0)));
+              const nextQty = Math.max(1, qty);
+              if (maxQty && nextQty > maxQty) {
+                toast.error(`Only ${maxQty} in stock`);
+                return { ...item, qty: maxQty };
+              }
+
+              return { ...item, qty: nextQty };
+            })
             .filter((item) => item.qty > 0),
         );
       },

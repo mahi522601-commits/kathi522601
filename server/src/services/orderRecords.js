@@ -29,10 +29,66 @@ function buildRewardCouponCode(orderCount) {
   return `KCLOVE${String(orderCount + 1).padStart(4, '0')}`;
 }
 
+function normalizeOrderItems(items) {
+  return Array.isArray(items)
+    ? items.map((item) => ({
+        ...item,
+        qty: Math.max(0, Math.floor(Number(item.qty || item.quantity || 0))),
+      }))
+    : [];
+}
+
+async function reserveOrderStock(items) {
+  const requestedByProduct = new Map();
+
+  for (const item of items) {
+    if (!item.productId || item.qty <= 0) {
+      const error = new Error('Order contains an invalid product quantity');
+      error.status = 400;
+      throw error;
+    }
+
+    requestedByProduct.set(item.productId, (requestedByProduct.get(item.productId) || 0) + item.qty);
+  }
+
+  const reservedProducts = [];
+
+  for (const [productId, requestedQty] of requestedByProduct.entries()) {
+    const product = await getDocument('products', productId);
+    const stockQuantity = Math.max(0, Math.floor(Number(product?.stockQuantity || 0)));
+
+    if (!product || product.soldOut || !product.inStock || stockQuantity <= 0) {
+      const matchingItem = items.find((item) => item.productId === productId);
+      const error = new Error(`${matchingItem?.name || 'This item'} is out of stock`);
+      error.status = 409;
+      throw error;
+    }
+
+    if (requestedQty > stockQuantity) {
+      const error = new Error(`Only ${stockQuantity} stock available for ${product.name || 'this item'}`);
+      error.status = 409;
+      throw error;
+    }
+
+    reservedProducts.push({ product, requestedQty, stockQuantity });
+  }
+
+  for (const { product, requestedQty, stockQuantity } of reservedProducts) {
+    const nextStock = stockQuantity - requestedQty;
+    await updateDocument('products', product.id, {
+      stockQuantity: nextStock,
+      soldCount: Number(product.soldCount || 0) + requestedQty,
+      inStock: nextStock > 0,
+      soldOut: nextStock <= 0,
+    });
+  }
+}
+
 export async function createStoredOrder(payload) {
   const orders = await listDocuments('orders');
   const createdAt = payload.createdAt || new Date().toISOString();
   const initialStatus = payload.status || 'Pending';
+  const items = normalizeOrderItems(payload.items);
   const subtotal = Number(payload.subtotal ?? payload.pricing?.subtotal ?? 0);
   const couponCode = normalizeCouponCode(payload.couponCode || payload.pricing?.couponCode);
   let couponPatch = null;
@@ -56,6 +112,7 @@ export async function createStoredOrder(payload) {
 
   const normalizedPayload = {
     ...payload,
+    items,
     couponCode: couponCode || null,
     discount: verifiedDiscount,
     total: couponCode ? Math.max(0, subtotal - verifiedDiscount) : payload.total,
@@ -68,6 +125,9 @@ export async function createStoredOrder(payload) {
       total: couponCode ? Math.max(0, subtotal - verifiedDiscount) : Number(payload.total || 0),
     },
   };
+
+  await reserveOrderStock(items);
+
   const receiptNumber = payload.receiptNumber || buildReceiptNumber(orders.length);
   const shouldCreateRewardCoupon = Array.isArray(normalizedPayload.items) && normalizedPayload.items.length > 0;
   const rewardCoupon = shouldCreateRewardCoupon

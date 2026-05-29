@@ -27,6 +27,7 @@ function buildProduct(id, overrides) {
       { name: 'Red', hex: colorMap.Red },
       { name: 'Green', hex: colorMap.Green },
     ],
+    stockQuantity: overrides.stockQuantity ?? 10,
     inStock: overrides.inStock ?? true,
     soldOut: overrides.soldOut ?? false,
     isFeatured: overrides.isFeatured ?? false,

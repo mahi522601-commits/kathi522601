@@ -52,7 +52,7 @@ export default function Shop() {
         ) {
           return false;
         }
-        if (inStockOnly && (!product.inStock || product.soldOut)) {
+        if (inStockOnly && (!product.inStock || product.soldOut || Number(product.stockQuantity || 0) <= 0)) {
           return false;
         }
         return true;

@@ -60,6 +60,8 @@ function normalizeProduct(product, index = 0) {
   const salePrice = Number(product.salePrice || 0);
   const originalPrice = Number(product.originalPrice || salePrice || 0);
   const imageObjects = normalizeImages(product.images || []);
+  const stockQuantity = Math.max(0, Math.floor(Number(product.stockQuantity ?? 0)));
+  const hasStock = stockQuantity > 0;
 
   return {
     ...product,
@@ -78,8 +80,9 @@ function normalizeProduct(product, index = 0) {
     imageObjects,
     images: imageObjects.map((image) => image.displayUrl),
     thumbnails: imageObjects.map((image) => image.thumbnail),
-    inStock: product.inStock ?? true,
-    soldOut: product.soldOut ?? false,
+    stockQuantity,
+    inStock: Boolean(product.inStock ?? hasStock) && hasStock,
+    soldOut: Boolean(product.soldOut ?? !hasStock) || !hasStock,
     isFeatured: product.isFeatured ?? false,
     isNewArrival: product.isNewArrival ?? false,
     soldCount: product.soldCount || 0,
@@ -101,7 +104,7 @@ function filterProducts(products, filters = {}) {
         return false;
       }
 
-      if (filters.inStockOnly && (!product.inStock || product.soldOut)) {
+      if (filters.inStockOnly && (!product.inStock || product.soldOut || product.stockQuantity <= 0)) {
         return false;
       }
 
@@ -210,8 +213,12 @@ export async function getNewArrivals(limitCount = 8) {
 }
 
 export async function saveProduct(product) {
+  const stockQuantity = Math.max(0, Math.floor(Number(product.stockQuantity || 0)));
   const payload = {
     ...product,
+    stockQuantity,
+    inStock: Boolean(product.inStock) && stockQuantity > 0,
+    soldOut: Boolean(product.soldOut) || stockQuantity <= 0,
     colors: normalizeColors(product.colors),
     images: (product.imageObjects || normalizeImages(product.images || [])).map((image) => ({
       id: image.id || image.url || image.displayUrl || image,

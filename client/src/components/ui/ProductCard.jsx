@@ -34,6 +34,7 @@ export default function ProductCard({ product, priority = false }) {
   }, [product.imageObjects, product.images]);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const primaryImage = cardImages[0] || '/logo.png';
+  const isAvailable = product.inStock && !product.soldOut && Number(product.stockQuantity || 0) > 0;
 
   useEffect(() => {
     setActiveImageIndex(0);
@@ -80,7 +81,7 @@ export default function ProductCard({ product, priority = false }) {
           </Link>
 
           <div className="absolute left-3 top-3">
-            {product.soldOut ? <Badge tone="muted">Sold Out</Badge> : <Badge>Sale</Badge>}
+            {isAvailable ? <Badge>Sale</Badge> : <Badge tone="muted">Sold Out</Badge>}
           </div>
 
           <button
@@ -105,12 +106,12 @@ export default function ProductCard({ product, priority = false }) {
             <button
               type="button"
               className={`flex h-10 w-full items-center justify-center rounded-full text-sm font-semibold ${
-                product.soldOut ? 'bg-white/20 text-white/60' : 'bg-primary text-white'
+                isAvailable ? 'bg-primary text-white' : 'bg-white/20 text-white/60'
               }`}
-              disabled={product.soldOut}
+              disabled={!isAvailable}
               onClick={() => addToCart(product, selectedColor || product.colors?.[0], 1)}
             >
-              {product.soldOut ? 'Sold Out' : 'Quick Add'}
+              {isAvailable ? 'Quick Add' : 'Sold Out'}
             </button>
           </div>
         </div>

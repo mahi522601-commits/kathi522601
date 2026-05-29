@@ -33,6 +33,8 @@ export default function ProductDetail() {
         .slice(0, 4),
     [product?.category, product?.id, products],
   );
+  const stockQuantity = Math.max(0, Math.floor(Number(product?.stockQuantity || 0)));
+  const isAvailable = Boolean(product?.inStock) && !product?.soldOut && stockQuantity > 0;
 
   useEffect(() => {
     if (product) {
@@ -108,27 +110,32 @@ export default function ProductDetail() {
               <div className="mt-8">
                 <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Quantity</p>
                 <div className="mt-3">
-                  <QuantitySelector value={quantity} onChange={setQuantity} />
+                  <QuantitySelector value={quantity} onChange={setQuantity} max={stockQuantity} />
                 </div>
+                {isAvailable ? (
+                  <p className="mt-2 text-xs font-semibold text-emerald-700">{stockQuantity} available</p>
+                ) : null}
               </div>
 
               <div className="mt-8 space-y-3">
                 <button
                   type="button"
                   className={`action-button w-full ${
-                    product.soldOut ? 'cursor-not-allowed bg-[#a8937b] hover:bg-[#a8937b]' : ''
+                    !isAvailable ? 'cursor-not-allowed bg-[#a8937b] hover:bg-[#a8937b]' : ''
                   }`}
-                  disabled={product.soldOut}
+                  disabled={!isAvailable}
                   onClick={() => addToCart(product, selectedColor, quantity)}
                 >
-                  {product.soldOut ? 'Sold Out' : 'Add to Cart'}
+                  {isAvailable ? 'Add to Cart' : 'Sold Out'}
                 </button>
                 <button
                   type="button"
-                  className="action-button-outline w-full"
+                  className={`action-button-outline w-full ${!isAvailable ? 'cursor-not-allowed opacity-60' : ''}`}
+                  disabled={!isAvailable}
                   onClick={() => {
-                    addToCart(product, selectedColor, quantity);
-                    navigate('/checkout');
+                    if (addToCart(product, selectedColor, quantity)) {
+                      navigate('/checkout');
+                    }
                   }}
                 >
                   Buy Now
