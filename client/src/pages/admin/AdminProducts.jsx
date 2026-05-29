@@ -218,7 +218,7 @@ export default function AdminProducts() {
                             <td className="px-4 py-4">
                               <span className={`rounded-full px-3 py-1 text-xs font-semibold ${product.inStock && !product.soldOut && Number(product.stockQuantity || 0) > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                                 {product.inStock && !product.soldOut && Number(product.stockQuantity || 0) > 0
-                                  ? `${product.stockQuantity} in stock`
+                                  ? Number(product.stockQuantity || 0)
                                   : 'Out'}
                               </span>
                             </td>
