@@ -6,6 +6,8 @@
   phone: '9392173693',
   phoneDisplay: '93921 73693',
   phoneHref: 'tel:9392173693',
+  upiId: '9392173693@upi',
+  upiName: 'Khyathi Collections',
 
   whatsappHref:
     'https://wa.me/919392173693?text=Namaste%20Khyathi%20Collections%2C%20I%20need%20help%20with%20your%20collection.',

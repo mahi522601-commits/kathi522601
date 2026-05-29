@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
-import { ArrowDown, ArrowUp, CalendarClock, Loader2, Save, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Image, Loader2, Save, Sparkles, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getSiteSettings, saveSiteSettings } from '../../firebase/settingsService';
 import { isBannerScheduled, resolveBannerImage } from '../../utils/bannerScheduling';
@@ -19,21 +19,27 @@ function BannerPreview({ banner, mode = 'mobile' }) {
   const imageUrl = resolveBannerImage(banner.image);
   const frameClass =
     mode === 'mobile'
-      ? 'mx-auto h-[300px] max-w-[240px] rounded-[22px]'
-      : 'h-[220px] w-full rounded-[18px]';
+      ? 'mx-auto h-[320px] max-w-[240px] rounded-[26px]'
+      : 'h-[240px] w-full rounded-[22px]';
 
   return (
-    <div className={`relative overflow-hidden border border-[#ead7a2] bg-[#120b07] shadow-[0_18px_48px_rgba(42,29,16,0.16)] ${frameClass}`}>
+    <div className={`relative overflow-hidden border border-[#ead7a2] bg-[#120b07] shadow-[0_22px_60px_rgba(42,29,16,0.2)] ${frameClass}`}>
       {imageUrl ? (
-        <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-contain" />
+        <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1c120a] to-[#6f5428]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,#f6d878_0,#5b2e19_28%,#120b07_68%)]" />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/10" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/18 to-black/5" />
+      <div className="absolute left-4 top-4 rounded-full border border-white/25 bg-white/12 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.22em] text-white backdrop-blur-md">
+        Live Poster
+      </div>
       <div className="absolute inset-x-0 bottom-0 p-5 text-white">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#f6d878]">Festival Banner</p>
+        <p className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#f6d878]">
+          <Sparkles size={12} />
+          Festival Drop
+        </p>
         <h4 className="mt-2 font-heading text-3xl leading-none">{banner.title || 'Banner title'}</h4>
-        <p className="mt-2 line-clamp-3 text-xs leading-5 text-white/75">{banner.subtitle || 'Banner subtitle preview'}</p>
+        <p className="mt-2 line-clamp-3 text-xs leading-5 text-white/82">{banner.subtitle || 'Banner subtitle preview'}</p>
       </div>
     </div>
   );
@@ -149,16 +155,16 @@ export default function FestivalBannersManager() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[28px] border border-white/10 bg-gradient-to-br from-[#24140a] to-[#140b06] p-6 text-white">
+      <div className="rounded-[28px] border border-white/10 bg-[#1c120a] p-6 text-white shadow-[0_26px_70px_rgba(0,0,0,0.24)]">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-[#f6d878]">
-              <CalendarClock size={14} />
-              Poster Banner Management
+              <Image size={14} />
+              Advanced Poster Studio
             </p>
             <h1 className="mt-3 font-heading text-5xl text-white">Poster Festival Banners</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[#d8c6aa]">
-              Upload poster-style banners, schedule start and end dates, preview mobile and desktop frames, and let the storefront auto activate them.
+              Create sharper campaign posters with mobile and desktop previews, scheduling, redirect links, and storefront auto activation.
             </p>
           </div>
           <button type="button" className="action-button gap-2" onClick={handleSave} disabled={saving}>
@@ -169,8 +175,8 @@ export default function FestivalBannersManager() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded-[24px] border border-borderwarm bg-[#fffaf0] p-5 text-primary">
-          <h2 className="font-heading text-3xl">Create Banner</h2>
+        <div className="rounded-[20px] border border-[#ead7a2] bg-white p-5 text-primary shadow-[0_18px_50px_rgba(42,29,16,0.08)]">
+          <h2 className="font-heading text-3xl">Campaign Details</h2>
           <div className="mt-5 space-y-4">
             <input className="input-shell" placeholder="Title" value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} />
             <textarea className="w-full rounded-[1.4rem] border border-borderwarm bg-white p-4 text-sm outline-none" rows="3" placeholder="Subtitle" value={draft.subtitle} onChange={(event) => setDraft({ ...draft, subtitle: event.target.value })} />
@@ -196,8 +202,8 @@ export default function FestivalBannersManager() {
           </div>
         </div>
 
-        <div className="rounded-[24px] border border-borderwarm bg-white p-5 text-primary">
-          <h2 className="font-heading text-3xl">Responsive Preview</h2>
+        <div className="rounded-[20px] border border-[#ead7a2] bg-[#fffaf0] p-5 text-primary shadow-[0_18px_50px_rgba(42,29,16,0.08)]">
+          <h2 className="font-heading text-3xl">Live Preview</h2>
           <div className="mt-5 grid gap-5 lg:grid-cols-[260px_1fr]">
             <BannerPreview banner={{ ...draft, image: draftImages[0] }} mode="mobile" />
             <BannerPreview banner={{ ...draft, image: draftImages[0] }} mode="desktop" />
@@ -209,7 +215,7 @@ export default function FestivalBannersManager() {
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <h2 className="font-heading text-3xl">Scheduled Banners</h2>
-            <p className="text-sm text-muted">First active scheduled banner appears as a half-screen poster on the storefront.</p>
+            <p className="text-sm text-muted">First active scheduled banner appears as a premium poster popup on the storefront.</p>
           </div>
           <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white">
             {settings?.festivalBanners?.length || 0} banners

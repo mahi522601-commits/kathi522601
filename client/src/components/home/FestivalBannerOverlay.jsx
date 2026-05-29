@@ -54,14 +54,14 @@ export default function FestivalBannerOverlay() {
     <AnimatePresence>
       {activeBanner && imageUrl && !dismissed ? (
         <motion.section
-          className="fixed inset-0 z-[70] flex min-h-screen items-center justify-center overflow-hidden bg-black/68 px-4 py-8 text-white backdrop-blur-sm"
+          className="fixed inset-0 z-[70] flex min-h-screen items-center justify-center overflow-hidden bg-black/72 px-3 py-6 text-white backdrop-blur-md"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.45 }}
         >
           <motion.div
-            className="relative w-full max-w-[920px] overflow-hidden rounded-[24px] border border-[#f6d878]/45 bg-[#120b07] shadow-[0_28px_90px_rgba(0,0,0,0.42)]"
+            className="relative w-full max-w-[980px] overflow-hidden rounded-[28px] border border-[#f6d878]/45 bg-[#120b07] shadow-[0_32px_110px_rgba(0,0,0,0.5)]"
             initial={{ opacity: 0, y: 28, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 18, scale: 0.98 }}
@@ -77,20 +77,21 @@ export default function FestivalBannerOverlay() {
             </button>
 
             <Link to={activeBanner.redirectUrl || '/collections'} onClick={closeBanner} className="block">
-              <div className="relative max-h-[52vh] min-h-[300px] overflow-hidden md:min-h-[360px]">
+              <div className="relative min-h-[430px] overflow-hidden sm:min-h-[520px] md:min-h-[560px]">
                 <img
                   src={imageUrl}
                   alt={activeBanner.title}
-                  className="h-full max-h-[52vh] min-h-[300px] w-full object-contain md:min-h-[360px]"
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent p-5 md:p-7">
-                  <span className="inline-flex rounded-full border border-[#f6d878]/40 bg-black/30 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#f6d878] backdrop-blur-md">
-                    Festival Poster
+                <div className="absolute inset-0 bg-gradient-to-r from-black/84 via-black/34 to-black/5" />
+                <div className="absolute inset-x-0 bottom-0 p-5 md:p-8">
+                  <span className="inline-flex rounded-full border border-[#f6d878]/40 bg-white/12 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#f6d878] backdrop-blur-md">
+                    Limited Festival Edit
                   </span>
-                  <h1 className="mt-4 font-heading text-4xl leading-none text-white md:text-5xl">
+                  <h1 className="mt-4 max-w-2xl font-heading text-4xl leading-none text-white md:text-6xl">
                     {activeBanner.title}
                   </h1>
-                  <p className="mt-3 max-w-lg text-sm leading-6 text-white/78">
+                  <p className="mt-3 max-w-xl text-sm leading-6 text-white/82 md:text-base">
                     {activeBanner.subtitle}
                   </p>
                   <span className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#fffaf0] px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-primary shadow-[0_18px_46px_rgba(246,216,120,0.22)]">

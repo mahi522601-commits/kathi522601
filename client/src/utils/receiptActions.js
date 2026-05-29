@@ -4,44 +4,122 @@ function receiptFileName(order) {
 }
 
 export async function downloadReceiptPdf(element, order) {
-  if (!element) {
+  if (!order) {
     throw new Error('Receipt is not ready for download.');
   }
 
-  const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-    import('html2canvas'),
-    import('jspdf'),
-  ]);
-
-  const canvas = await html2canvas(element, {
-    scale: Math.min(window.devicePixelRatio || 2, 3),
-    backgroundColor: '#fffaf0',
-    useCORS: true,
-    allowTaint: false,
-    imageTimeout: 15000,
-    logging: false,
-  });
-
+  const { default: jsPDF } = await import('jspdf');
   const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
   const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-  const margin = 8;
-  const imageWidth = pageWidth - margin * 2;
-  const imageHeight = (canvas.height * imageWidth) / canvas.width;
-  let remainingHeight = imageHeight;
-  let position = margin;
-  const imageData = canvas.toDataURL('image/png');
+  const margin = 12;
+  const right = pageWidth - margin;
+  const primary = [28, 18, 10];
+  const gold = [184, 139, 45];
+  const muted = [105, 90, 72];
+  const money = (value) => `Rs. ${Number(value || 0).toLocaleString('en-IN')}`;
+  let y = 14;
 
-  pdf.addImage(imageData, 'PNG', margin, position, imageWidth, imageHeight, undefined, 'FAST');
-  remainingHeight -= pageHeight - margin * 2;
+  pdf.setFillColor(...primary);
+  pdf.roundedRect(margin, y, pageWidth - margin * 2, 34, 4, 4, 'F');
+  pdf.setTextColor(255, 250, 240);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(18);
+  pdf.text('Khyathi Collections', margin + 6, y + 12);
+  pdf.setFontSize(8);
+  pdf.setTextColor(232, 201, 122);
+  pdf.text('ADVANCED DIGITAL RECEIPT', margin + 6, y + 20);
+  pdf.setTextColor(255, 250, 240);
+  pdf.text(`Receipt: ${order.receiptNumber || order.orderNumber || order.id}`, right - 6, y + 12, { align: 'right' });
+  pdf.text(`Order: ${order.orderNumber || order.id}`, right - 6, y + 20, { align: 'right' });
+  y += 43;
 
-  while (remainingHeight > 0) {
-    position = remainingHeight - imageHeight + margin;
-    pdf.addPage();
-    pdf.addImage(imageData, 'PNG', margin, position, imageWidth, imageHeight, undefined, 'FAST');
-    remainingHeight -= pageHeight - margin * 2;
+  pdf.setTextColor(...primary);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Customer', margin, y);
+  pdf.text('Payment', margin + 96, y);
+  y += 6;
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(8.5);
+  pdf.setTextColor(...muted);
+  const address = [
+    order.address?.line1,
+    order.address?.line2,
+    [order.address?.city, order.address?.state].filter(Boolean).join(', '),
+    order.address?.pincode,
+  ].filter(Boolean).join(', ');
+  pdf.text([order.customerName || '', order.phone || '', address].filter(Boolean), margin, y, {
+    maxWidth: 82,
+    lineHeightFactor: 1.35,
+  });
+  pdf.text([
+    `Status: ${order.paymentStatus || 'Pending'}`,
+    `Method: ${order.paymentMethod || 'UPI / Manual verification'}`,
+    `Date: ${order.createdAt ? new Date(order.createdAt).toLocaleString('en-IN') : 'Not available'}`,
+  ], margin + 96, y, { maxWidth: 88, lineHeightFactor: 1.35 });
+  y += 28;
+
+  pdf.setFillColor(245, 235, 216);
+  pdf.roundedRect(margin, y, pageWidth - margin * 2, 9, 2, 2, 'F');
+  pdf.setTextColor(...primary);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(8);
+  pdf.text('Product', margin + 4, y + 6);
+  pdf.text('Qty', margin + 120, y + 6);
+  pdf.text('Amount', right - 4, y + 6, { align: 'right' });
+  y += 13;
+
+  pdf.setFont('helvetica', 'normal');
+  pdf.setTextColor(...muted);
+  const visibleItems = (order.items || []).slice(0, 7);
+  visibleItems.forEach((item) => {
+    const name = `${item.name || 'Product'}${item.color ? ` (${item.color})` : ''}`;
+    pdf.text(pdf.splitTextToSize(name, 108).slice(0, 2), margin + 4, y);
+    pdf.text(String(item.qty || 1), margin + 121, y);
+    pdf.text(money(Number(item.price || item.salePrice || 0) * Number(item.qty || 1)), right - 4, y, { align: 'right' });
+    y += 10;
+  });
+
+  if ((order.items || []).length > visibleItems.length) {
+    pdf.text(`+ ${(order.items || []).length - visibleItems.length} more item(s) included in this order`, margin + 4, y);
+    y += 8;
   }
 
+  y += 3;
+  pdf.setDrawColor(234, 215, 162);
+  pdf.line(margin, y, right, y);
+  y += 8;
+  const totalsX = right - 70;
+  pdf.setFontSize(9);
+  pdf.text('Subtotal', totalsX, y);
+  pdf.text(money(order.pricing?.subtotal ?? order.subtotal), right, y, { align: 'right' });
+  y += 7;
+  pdf.text('Discount', totalsX, y);
+  pdf.text(`-${money(order.pricing?.discount ?? order.discount)}`, right, y, { align: 'right' });
+  y += 7;
+  pdf.text('Shipping', totalsX, y);
+  pdf.text('FREE', right, y, { align: 'right' });
+  y += 9;
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(14);
+  pdf.setTextColor(...primary);
+  pdf.text('Total', totalsX, y);
+  pdf.text(money(order.total), right, y, { align: 'right' });
+
+  y += 18;
+  pdf.setFillColor(255, 246, 218);
+  pdf.roundedRect(margin, y, pageWidth - margin * 2, 22, 3, 3, 'F');
+  pdf.setTextColor(...gold);
+  pdf.setFontSize(8);
+  pdf.text('DELIVERY', margin + 5, y + 7);
+  pdf.setTextColor(...primary);
+  pdf.setFontSize(10);
+  pdf.text(order.receipt?.expectedDeliveryText || 'Expected Delivery Within 5 Days', margin + 5, y + 15);
+  pdf.setTextColor(...muted);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(8);
+  pdf.text('For support, call 93921 73693 or message Khyathi Collections on WhatsApp.', right - 5, y + 15, { align: 'right' });
+  pdf.text('Thank you for shopping with us.', pageWidth / 2, 286, { align: 'center' });
   pdf.save(receiptFileName(order));
 }
 

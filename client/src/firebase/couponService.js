@@ -20,9 +20,9 @@ export async function validateCoupon(code, subtotal) {
   }
 }
 
-export async function saveCoupon(coupon) {
+export async function saveCoupon(coupon, options = {}) {
   try {
-    if (coupon.id || coupon.code) {
+    if (options.isEditing || (coupon.id && coupon.id !== coupon.code)) {
       return await couponApi.update(coupon.code || coupon.id, coupon);
     }
     return await couponApi.create(coupon);

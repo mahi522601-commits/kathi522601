@@ -31,7 +31,7 @@ export default function AdminCoupons() {
 
   async function handleSave(coupon) {
     try {
-      const response = await saveCoupon(coupon);
+      const response = await saveCoupon(coupon, { isEditing: Boolean(editingCoupon) });
       setCoupons((current) => {
         const exists = current.some((entry) => entry.code === response.code);
         return exists ? current.map((entry) => (entry.code === response.code ? response : entry)) : [response, ...current];

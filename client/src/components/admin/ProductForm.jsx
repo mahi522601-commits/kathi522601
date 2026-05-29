@@ -1,5 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import ImageUploader from './ImageUploader';
+import { colorMap } from '../../utils/colorMap';
 
 const blankProduct = {
   name: '',
@@ -70,6 +71,10 @@ export default function ProductForm({ product, onSave, onCancel, saving = false 
         colorIndex === index ? { ...color, ...patch } : color,
       ),
     }));
+  }
+
+  function selectKnownColor(index, name) {
+    updateColor(index, { name, hex: colorMap[name] || '#000000' });
   }
 
   async function handleSubmit(event) {
@@ -148,9 +153,24 @@ export default function ProductForm({ product, onSave, onCancel, saving = false 
         </div>
         <div className="mt-4 space-y-3">
           {form.colors.map((color, index) => (
-            <div key={`${color.name}-${index}`} className="grid gap-3 md:grid-cols-[1fr_140px_100px]">
-              <input className="input-shell" placeholder="Color Name" value={color.name} onChange={(event) => updateColor(index, { name: event.target.value })} />
-              <input type="color" className="h-12 w-full rounded-full border border-borderwarm bg-white px-3" value={color.hex} onChange={(event) => updateColor(index, { hex: event.target.value })} />
+            <div key={`${color.name}-${index}`} className="grid gap-3 md:grid-cols-[1fr_1fr_120px_100px]">
+              <select
+                className="input-shell"
+                value={colorMap[color.name] ? color.name : ''}
+                onChange={(event) => selectKnownColor(index, event.target.value)}
+              >
+                <option value="">Select color</option>
+                {Object.keys(colorMap).map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              <input className="input-shell" placeholder="Custom color name" value={color.name} onChange={(event) => updateColor(index, { name: event.target.value })} />
+              <div className="flex items-center gap-2 rounded-full border border-borderwarm bg-white px-3">
+                <span className="h-7 w-7 rounded-full border border-black/10" style={{ backgroundColor: color.hex }} />
+                <input type="color" className="h-12 w-full min-w-0 bg-transparent" value={color.hex} onChange={(event) => updateColor(index, { hex: event.target.value })} />
+              </div>
               <button
                 type="button"
                 className="rounded-full border border-borderwarm px-3 py-3 text-sm text-maroon"

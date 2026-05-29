@@ -76,7 +76,7 @@ function imageUrl(image) {
     return image;
   }
 
-  return image.displayUrl || image.url || image.thumbnail || '';
+  return image.displayUrl || image.url || image.thumbnail || image.secure_url || '';
 }
 
 function downloadImage(url, orderNumber) {
@@ -178,7 +178,7 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                   <td className="px-4 py-4">{new Date(order.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-4">{formatPrice(order.total)}</td>
                   <td className="px-4 py-4">
-                    {imageUrl(order.paymentScreenshot || order.paymentScreenshotUrl) ? (
+                    {imageUrl(order.paymentScreenshot || order.paymentScreenshotUrl || order.paymentProofUrl) ? (
                       <button
                         type="button"
                         className="inline-flex items-center gap-2 rounded-full border border-borderwarm px-3 py-2 text-xs font-semibold text-primary"
@@ -188,7 +188,7 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                         }}
                       >
                         <Eye size={14} />
-                        View
+                        View Screenshot
                       </button>
                     ) : (
                       <span className="text-xs text-muted">None</span>
@@ -302,10 +302,10 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
             </div>
             <div className="lg:col-span-2">
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Payment Screenshot</p>
-              {imageUrl(selectedOrder.paymentScreenshot || selectedOrder.paymentScreenshotUrl) ? (
+              {imageUrl(selectedOrder.paymentScreenshot || selectedOrder.paymentScreenshotUrl || selectedOrder.paymentProofUrl) ? (
                 <div className="mt-3 grid gap-4 rounded-[1.2rem] bg-cream p-4 sm:grid-cols-[160px_1fr]">
                   <img
-                    src={imageUrl(selectedOrder.paymentScreenshot || selectedOrder.paymentScreenshotUrl)}
+                    src={imageUrl(selectedOrder.paymentScreenshot || selectedOrder.paymentScreenshotUrl || selectedOrder.paymentProofUrl)}
                     alt={`Payment proof for ${selectedOrder.orderNumber}`}
                     className="h-44 w-full rounded-xl object-contain sm:h-40"
                     loading="lazy"
@@ -321,7 +321,7 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                       <button
                         type="button"
                         className="action-button px-4 py-2 text-xs"
-                        onClick={() => downloadImage(imageUrl(selectedOrder.paymentScreenshot || selectedOrder.paymentScreenshotUrl), selectedOrder.orderNumber)}
+                        onClick={() => downloadImage(imageUrl(selectedOrder.paymentScreenshot || selectedOrder.paymentScreenshotUrl || selectedOrder.paymentProofUrl), selectedOrder.orderNumber)}
                       >
                         Download
                       </button>
@@ -347,7 +347,7 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                 <button
                   type="button"
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-borderwarm text-primary"
-                  onClick={() => downloadImage(imageUrl(proofPreview.paymentScreenshot || proofPreview.paymentScreenshotUrl), proofPreview.orderNumber)}
+                  onClick={() => downloadImage(imageUrl(proofPreview.paymentScreenshot || proofPreview.paymentScreenshotUrl || proofPreview.paymentProofUrl), proofPreview.orderNumber)}
                   aria-label="Download payment proof"
                 >
                   <Download size={16} />
@@ -363,7 +363,7 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
               </div>
             </div>
             <img
-              src={imageUrl(proofPreview.paymentScreenshot || proofPreview.paymentScreenshotUrl)}
+              src={imageUrl(proofPreview.paymentScreenshot || proofPreview.paymentScreenshotUrl || proofPreview.paymentProofUrl)}
               alt={`Payment proof for ${proofPreview.orderNumber}`}
               className="max-h-[78vh] w-full rounded-[1rem] object-contain"
             />

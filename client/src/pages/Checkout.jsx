@@ -36,6 +36,29 @@ const PAYMENT_APPS = [
   },
 ];
 
+function buildUpiUrl(app, amount) {
+  const params = new URLSearchParams({
+    pa: siteConfig.upiId,
+    pn: siteConfig.upiName,
+    am: Number(amount || 0).toFixed(2),
+    cu: 'INR',
+    tn: 'Khyathi Collections order payment',
+  });
+  const query = params.toString();
+
+  if (app.id === 'phonepe') {
+    return `phonepe://pay?${query}`;
+  }
+  if (app.id === 'googlepay') {
+    return `tez://upi/pay?${query}`;
+  }
+  if (app.id === 'paytm') {
+    return `paytmmp://pay?${query}`;
+  }
+
+  return `upi://pay?${query}`;
+}
+
 function resolveImageUrl(image) {
   if (!image) {
     return '';
@@ -104,6 +127,11 @@ export default function Checkout() {
       setCoupon(null);
       toast.error(error.message || 'Invalid coupon code');
     }
+  }
+
+  function openPaymentApp(app) {
+    setSelectedPaymentApp(app);
+    window.location.href = buildUpiUrl(app, total);
   }
 
   function validateDelivery() {
@@ -379,10 +407,10 @@ export default function Checkout() {
                         <button
                           key={app.id}
                           type="button"
-                          className={`rounded-[18px] border-2 bg-white p-4 text-left transition ${
+                          className={`rounded-[16px] border-2 bg-white p-3 text-left transition sm:p-4 ${
                             selected ? 'border-gold shadow-[0_14px_36px_rgba(201,168,76,0.22)]' : 'border-borderwarm'
                           }`}
-                          onClick={() => setSelectedPaymentApp(app)}
+                          onClick={() => openPaymentApp(app)}
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-black/5 text-lg font-black shadow-sm ${app.className}`}>
@@ -390,24 +418,29 @@ export default function Checkout() {
                             </div>
                             {selected ? <Check className="text-emerald-600" size={18} /> : null}
                           </div>
-                          <p className="mt-4 font-semibold text-primary">{app.name}</p>
+                          <p className="mt-3 font-semibold text-primary">{app.name}</p>
+                          <p className="mt-1 text-xs text-muted">Tap to open app</p>
                         </button>
                       );
                     })}
                   </div>
 
-                  <div className="rounded-[18px] border border-borderwarm bg-cream p-4">
-                    <div className="flex items-start gap-3">
+                  <div className="rounded-[16px] border border-borderwarm bg-cream p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
                       <Smartphone className="mt-1 shrink-0 text-gold-dark" size={20} />
                       <div>
                         <p className="font-semibold text-primary">Pay to Khyathi Collections</p>
                         <p className="mt-1 text-sm text-body">Amount: {formatPrice(total)}</p>
-                        <p className="text-sm text-body">Support/UPI phone: {siteConfig.phoneDisplay}</p>
+                        <p className="break-all text-sm text-body">UPI ID: {siteConfig.upiId}</p>
+                        <p className="text-sm text-body">Support phone: {siteConfig.phoneDisplay}</p>
                       </div>
                     </div>
+                    <a className="action-button mt-4 w-full py-3 text-sm sm:w-auto" href={buildUpiUrl(selectedPaymentApp, total)}>
+                      Open {selectedPaymentApp.name} and Pay
+                    </a>
                   </div>
 
-                  <label className="block rounded-[18px] border border-dashed border-gold bg-white p-5 text-center">
+                  <label className="block rounded-[16px] border border-dashed border-gold bg-white p-4 text-center sm:p-5">
                     <input
                       type="file"
                       accept="image/*"
@@ -415,7 +448,7 @@ export default function Checkout() {
                       onChange={(event) => setPaymentScreenshot(event.target.files?.[0] || null)}
                     />
                     {paymentPreview ? (
-                      <img src={paymentPreview} alt="Payment screenshot preview" className="mx-auto max-h-64 rounded-[14px] object-contain" />
+                      <img src={paymentPreview} alt="Payment screenshot preview" className="mx-auto max-h-52 rounded-[14px] object-contain sm:max-h-64" />
                     ) : (
                       <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-cream text-primary">
                         <ImagePlus size={24} />
