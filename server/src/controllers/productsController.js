@@ -35,7 +35,10 @@ function normalizeColors(colors = []) {
 }
 
 function normalizeProductPayload(payload) {
-  const stockQuantity = Math.max(0, Math.floor(Number(payload.stockQuantity || 0)));
+  const isSareeProduct = ['Sarees', 'Half Sarees'].includes(payload.category);
+  const stockQuantity = isSareeProduct
+    ? 1
+    : Math.max(0, Math.floor(Number(payload.stockQuantity || 0)));
 
   return {
     ...payload,

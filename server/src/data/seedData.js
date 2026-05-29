@@ -21,6 +21,7 @@ function buildImage(url, index) {
 function buildProduct(id, data) {
   const originalPrice = Number(data.originalPrice);
   const salePrice = Number(data.salePrice);
+  const category = data.category || 'Sarees';
 
   return {
     id,
@@ -39,7 +40,7 @@ function buildProduct(id, data) {
     discountPercent: Math.round(((originalPrice - salePrice) / originalPrice) * 100),
     soldCount: data.soldCount || 0,
     viewCount: data.viewCount || 0,
-    stockQuantity: data.stockQuantity ?? 10,
+    stockQuantity: ['Sarees', 'Half Sarees'].includes(category) ? 1 : data.stockQuantity ?? 10,
     inStock: data.inStock ?? true,
     soldOut: data.soldOut ?? false,
     isFeatured: data.isFeatured ?? false,

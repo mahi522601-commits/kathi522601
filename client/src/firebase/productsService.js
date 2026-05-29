@@ -62,7 +62,10 @@ function normalizeProduct(product, index = 0) {
   const salePrice = Number(product.salePrice || 0);
   const originalPrice = Number(product.originalPrice || salePrice || 0);
   const imageObjects = normalizeImages(product.images || []);
-  const stockQuantity = Math.max(0, Math.floor(Number(product.stockQuantity ?? 0)));
+  const isSareeProduct = ['Sarees', 'Half Sarees'].includes(product.category);
+  const stockQuantity = isSareeProduct
+    ? 1
+    : Math.max(0, Math.floor(Number(product.stockQuantity ?? 0)));
   const hasStock = stockQuantity > 0;
 
   return {
@@ -215,7 +218,10 @@ export async function getNewArrivals(limitCount = 8) {
 }
 
 export async function saveProduct(product) {
-  const stockQuantity = Math.max(0, Math.floor(Number(product.stockQuantity || 0)));
+  const isSareeProduct = ['Sarees', 'Half Sarees'].includes(product.category);
+  const stockQuantity = isSareeProduct
+    ? 1
+    : Math.max(0, Math.floor(Number(product.stockQuantity || 0)));
   const payload = {
     ...product,
     stockQuantity,
