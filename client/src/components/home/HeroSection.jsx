@@ -18,7 +18,7 @@ function resolveImageUrl(image) {
     return image;
   }
 
-  return image.displayUrl || image.url || image.medium?.url || image.thumbnail || '';
+  return image.thumbnail || image.medium?.url || image.displayUrl || image.url || '';
 }
 
 function resolvePreviewImageUrl(image) {
@@ -307,8 +307,6 @@ export default function HeroSection() {
                     fetchPriority="high"
                     decoding="async"
                     draggable="false"
-                    minValidWidth={600}
-                    minValidHeight={600}
                   />
                 </motion.div>
               </AnimatePresence>
