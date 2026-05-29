@@ -6,7 +6,7 @@
   phone: '9392173693',
   phoneDisplay: '93921 73693',
   phoneHref: 'tel:9392173693',
-  upiId: '9392173693@upi',
+  upiId: '9398724704@ybl',
   upiName: 'Khyathi Collections',
 
   whatsappHref:
