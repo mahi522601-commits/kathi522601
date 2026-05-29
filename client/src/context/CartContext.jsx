@@ -10,10 +10,14 @@ export const CartContext = createContext(null);
 
 function normalizeStoredItem(item = {}) {
   return {
-    productId: String(item.productId || item.id || '').trim(),
+    productId: String(item.productId || item.id || item._id || item.slug || '').trim(),
     color: String(item.color || '').trim(),
     qty: Math.max(1, Math.floor(Number(item.qty || item.quantity || 1))),
   };
+}
+
+function resolveProductId(product = {}) {
+  return String(product.id || product._id || product.productId || product.slug || '').trim();
 }
 
 function readStoredCart() {
@@ -51,9 +55,10 @@ function resolveImage(product) {
 }
 
 function buildOptimisticItem(product, color, qty) {
+  const productId = resolveProductId(product);
   const salePrice = Number(product.salePrice || 0);
   return {
-    productId: product.id,
+    productId,
     slug: product.slug,
     name: product.name,
     category: product.category,
@@ -80,7 +85,7 @@ export function CartProvider({ children }) {
     if (!items.length) {
       setQuotedItems([]);
       setUnavailableItems([]);
-      return;
+      return { items: [], unavailableItems: [], subtotal: 0, itemCount: 0 };
     }
 
     setQuoteLoading(true);
@@ -99,8 +104,10 @@ export function CartProvider({ children }) {
 
       setQuotedItems(liveItems);
       setUnavailableItems(quote.unavailableItems || []);
+      return quote;
     } catch (error) {
       toast.error(error.message || 'Unable to refresh cart prices');
+      return null;
     } finally {
       setQuoteLoading(false);
     }
@@ -132,8 +139,15 @@ export function CartProvider({ children }) {
       subtotal,
       refreshQuote: () => refreshQuote(cartItems),
       addToCart(product, color, quantity = 1) {
+        const productId = resolveProductId(product);
+        const safeQuantity = Math.max(1, Math.floor(Number(quantity || 1)));
         const stockQuantity = Math.max(0, Math.floor(Number(product.stockQuantity || 0)));
-        const resolvedColor = color?.name || product.colors?.[0]?.name || 'Default';
+        const resolvedColor = (typeof color === 'string' ? color : color?.name) || product.colors?.[0]?.name || 'Default';
+
+        if (!productId) {
+          toast.error('This product is missing a valid ID');
+          return false;
+        }
 
         if (product.soldOut || !product.inStock || stockQuantity <= 0) {
           toast.error('This item is sold out');
@@ -141,9 +155,9 @@ export function CartProvider({ children }) {
         }
 
         const existingItem = cartItems.find(
-          (item) => item.productId === product.id && item.color === resolvedColor,
+          (item) => item.productId === productId && item.color === resolvedColor,
         );
-        const nextQty = (existingItem?.qty || 0) + quantity;
+        const nextQty = (existingItem?.qty || 0) + safeQuantity;
 
         if (nextQty > stockQuantity) {
           toast.error(`Only ${stockQuantity} in stock`);
@@ -152,7 +166,7 @@ export function CartProvider({ children }) {
 
         setCartItems((current) => {
           const existingIndex = current.findIndex(
-            (item) => item.productId === product.id && item.color === resolvedColor,
+            (item) => item.productId === productId && item.color === resolvedColor,
           );
 
           if (existingIndex >= 0) {
@@ -161,12 +175,12 @@ export function CartProvider({ children }) {
             );
           }
 
-          return [...current, { productId: product.id, color: resolvedColor, qty: quantity }];
+          return [...current, { productId, color: resolvedColor, qty: safeQuantity }];
         });
 
         setQuotedItems((current) => {
           const existingIndex = current.findIndex(
-            (item) => item.productId === product.id && item.color === resolvedColor,
+            (item) => item.productId === productId && item.color === resolvedColor,
           );
 
           if (existingIndex >= 0) {
@@ -175,20 +189,21 @@ export function CartProvider({ children }) {
             );
           }
 
-          return [...current, buildOptimisticItem(product, resolvedColor, quantity)];
+          return [...current, buildOptimisticItem({ ...product, id: productId }, resolvedColor, safeQuantity)];
         });
 
         toast.success('Added to cart');
         return true;
       },
       updateQuantity(productId, color, qty) {
+        const safeQty = Math.max(0, Math.floor(Number(qty || 0)));
         setCartItems((current) =>
           current
             .map((item) => {
               if (item.productId !== productId || item.color !== color) {
                 return item;
               }
-              return { ...item, qty: Math.max(1, Math.floor(Number(qty || 1))) };
+              return { ...item, qty: safeQty };
             })
             .filter((item) => item.qty > 0),
         );

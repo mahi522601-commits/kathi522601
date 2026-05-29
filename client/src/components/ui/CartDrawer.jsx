@@ -16,7 +16,7 @@ const cartDrawerVariants = {
 };
 
 export default function CartDrawer({ open, onClose }) {
-  const { items, itemCount, subtotal, updateQuantity, removeFromCart, quoteLoading } = useCart();
+  const { items, itemCount, unavailableItems, subtotal, updateQuantity, removeFromCart, quoteLoading } = useCart();
   const navigate = useNavigate();
   const [orderNoteOpen, setOrderNoteOpen] = useState(false);
   const [couponOpen, setCouponOpen] = useState(false);
@@ -41,6 +41,26 @@ export default function CartDrawer({ open, onClose }) {
       setCouponResult(null);
       toast.error(error.message || 'Invalid coupon code');
     }
+  }
+
+  function proceedToCheckout() {
+    if (quoteLoading) {
+      toast.error('Please wait while cart prices refresh');
+      return;
+    }
+
+    if (!items.length || !itemCount) {
+      toast.error('Your cart is empty');
+      return;
+    }
+
+    if (unavailableItems.length) {
+      toast.error('Remove unavailable items before checkout');
+      return;
+    }
+
+    navigate('/checkout');
+    onClose();
   }
 
   return (
@@ -114,6 +134,11 @@ export default function CartDrawer({ open, onClose }) {
                       </div>
                     </div>
                   ))}
+                  {unavailableItems.length ? (
+                    <div className="rounded-[1.4rem] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                      {unavailableItems.length} item{unavailableItems.length === 1 ? '' : 's'} need attention before checkout.
+                    </div>
+                  ) : null}
                 </div>
               ) : (
                 <div className="rounded-[1.7rem] border border-dashed border-borderwarm bg-white px-6 py-10 text-center">
@@ -223,10 +248,7 @@ export default function CartDrawer({ open, onClose }) {
               <button
                 type="button"
                 className="action-button mt-5 w-full"
-                onClick={() => {
-                  navigate('/checkout');
-                  onClose();
-                }}
+                onClick={proceedToCheckout}
               >
                 Proceed To Checkout
               </button>

@@ -10,7 +10,7 @@ import { formatPrice } from '../utils/formatPrice';
 
 export default function Cart() {
   const navigate = useNavigate();
-  const { items, itemCount, subtotal, updateQuantity, removeFromCart, quoteLoading } = useCart();
+  const { items, itemCount, unavailableItems, subtotal, updateQuantity, removeFromCart, quoteLoading } = useCart();
   const [couponCode, setCouponCode] = useState('');
   const [coupon, setCoupon] = useState(null);
   const total = subtotal - (coupon?.discountAmount || 0);
@@ -24,6 +24,25 @@ export default function Cart() {
       setCoupon(null);
       toast.error(error.message || 'Invalid coupon code');
     }
+  }
+
+  function proceedToCheckout() {
+    if (quoteLoading) {
+      toast.error('Please wait while cart prices refresh');
+      return;
+    }
+
+    if (!items.length || !itemCount) {
+      toast.error('Your cart is empty');
+      return;
+    }
+
+    if (unavailableItems.length) {
+      toast.error('Remove unavailable items before checkout');
+      return;
+    }
+
+    navigate('/checkout');
   }
 
   return (
@@ -46,6 +65,11 @@ export default function Cart() {
           ) : (
             <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_360px]">
               <div className="space-y-4">
+                {unavailableItems.length ? (
+                  <div className="card-surface border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                    {unavailableItems.length} cart item{unavailableItems.length === 1 ? '' : 's'} need attention before checkout.
+                  </div>
+                ) : null}
                 {quoteLoading && !items.length ? (
                   <div className="card-surface p-6 text-sm text-muted">Refreshing latest product prices...</div>
                 ) : items.map((item) => (
@@ -107,7 +131,7 @@ export default function Cart() {
                   </div>
                 </div>
 
-                <button type="button" className="action-button mt-6 w-full" onClick={() => navigate('/checkout')}>
+                <button type="button" className="action-button mt-6 w-full" onClick={proceedToCheckout}>
                   Proceed To Checkout
                 </button>
               </aside>

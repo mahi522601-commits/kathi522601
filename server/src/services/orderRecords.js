@@ -14,6 +14,21 @@ function buildReceiptNumber(orderCount) {
   return `KC-RCPT-${new Date().getFullYear()}-${String(orderCount + 1).padStart(4, '0')}`;
 }
 
+function getNextSequence(orders, field, year = new Date().getFullYear()) {
+  const prefix = field === 'receiptNumber' ? `KC-RCPT-${year}-` : `KC-${year}-`;
+  const maxSequence = orders.reduce((max, order) => {
+    const value = String(order[field] || '');
+    if (!value.startsWith(prefix)) {
+      return max;
+    }
+
+    const sequence = Number(value.slice(prefix.length));
+    return Number.isFinite(sequence) ? Math.max(max, sequence) : max;
+  }, 0);
+
+  return maxSequence + 1;
+}
+
 function addDays(date, days) {
   const nextDate = new Date(date);
   nextDate.setDate(nextDate.getDate() + days);
@@ -34,13 +49,15 @@ async function reserveOrderStock(items) {
   const requestedByProduct = new Map();
 
   for (const item of items) {
-    if (!item.productId || item.qty <= 0) {
+    const productId = String(item.productId || item.id || item._id || item.slug || '').trim();
+
+    if (!productId || item.qty <= 0) {
       const error = new Error('Order contains an invalid product quantity');
       error.status = 400;
       throw error;
     }
 
-    requestedByProduct.set(item.productId, (requestedByProduct.get(item.productId) || 0) + item.qty);
+    requestedByProduct.set(productId, (requestedByProduct.get(productId) || 0) + item.qty);
   }
 
   const reservedProducts = [];
@@ -78,6 +95,7 @@ async function reserveOrderStock(items) {
 
 export async function createStoredOrder(payload) {
   const orders = await listDocuments('orders');
+  const { id, _id, ...safePayload } = payload;
   const createdAt = payload.createdAt || new Date().toISOString();
   const initialStatus = payload.status || 'Pending';
   const duplicateKey = payload.idempotencyKey || payload.transactionId || payload.paymentId || payload.gatewayOrderId;
@@ -124,7 +142,7 @@ export async function createStoredOrder(payload) {
   }
 
   const normalizedPayload = {
-    ...payload,
+    ...safePayload,
     items,
     couponCode: couponCode || null,
     discount: verifiedDiscount,
@@ -141,11 +159,14 @@ export async function createStoredOrder(payload) {
 
   await reserveOrderStock(items);
 
-  const receiptNumber = payload.receiptNumber || buildReceiptNumber(orders.length);
+  const orderYear = new Date(createdAt).getFullYear();
+  const orderSequence = getNextSequence(orders, 'orderNumber', orderYear);
+  const receiptSequence = getNextSequence(orders, 'receiptNumber', orderYear);
+  const receiptNumber = safePayload.receiptNumber || buildReceiptNumber(receiptSequence - 1);
   const shouldCreateRewardCoupon = Array.isArray(normalizedPayload.items) && normalizedPayload.items.length > 0;
   const rewardCoupon = shouldCreateRewardCoupon
     ? {
-        code: buildRewardCouponCode(orders.length),
+        code: buildRewardCouponCode(orderSequence - 1),
         discount: 10,
         minOrderValue: 0,
         maxUses: 1,
@@ -168,7 +189,7 @@ export async function createStoredOrder(payload) {
 
   return createDocument('orders', {
     ...normalizedPayload,
-    orderNumber: normalizedPayload.orderNumber || buildOrderNumber(orders.length),
+    orderNumber: normalizedPayload.orderNumber || buildOrderNumber(orderSequence - 1),
     receiptNumber,
     transactionId:
       normalizedPayload.transactionId ||

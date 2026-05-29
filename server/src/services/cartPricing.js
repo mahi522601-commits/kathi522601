@@ -2,7 +2,7 @@ import { getDocument } from './firestore.js';
 
 function normalizeCartItem(item = {}) {
   return {
-    productId: String(item.productId || item.id || '').trim(),
+    productId: String(item.productId || item.id || item._id || item.slug || '').trim(),
     color: String(item.color || '').trim(),
     qty: Math.max(0, Math.floor(Number(item.qty || item.quantity || 0))),
   };

@@ -85,7 +85,7 @@ function resolveImageUrl(image) {
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const { items, rawItems, itemCount, subtotal, clearCart, quoteLoading } = useCart();
+  const { items, rawItems, itemCount, subtotal, clearCart, quoteLoading, refreshQuote } = useCart();
   const { userProfile, updateProfileFields } = useAuth();
   const [step, setStep] = useState(0);
   const [couponCode, setCouponCode] = useState('');
@@ -204,13 +204,20 @@ export default function Checkout() {
       return;
     }
 
-    if (!itemCount) {
+    const latestQuote = await refreshQuote();
+
+    if (!itemCount || !rawItems.length) {
       toast.error('Your cart is empty');
       return;
     }
 
     if (quoteLoading) {
       toast.error('Please wait while cart prices refresh');
+      return;
+    }
+
+    if (!latestQuote || !latestQuote.items?.length || latestQuote.unavailableItems?.length) {
+      toast.error('Some cart items are unavailable. Please review your cart.');
       return;
     }
 

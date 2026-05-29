@@ -62,6 +62,7 @@ function normalizeProduct(product, index = 0) {
   const salePrice = Number(product.salePrice || 0);
   const originalPrice = Number(product.originalPrice || salePrice || 0);
   const imageObjects = normalizeImages(product.images || []);
+  const id = String(product.id || product._id || product.productId || product.slug || `prod-${Date.now()}-${index}`);
   const isSareeProduct = ['Sarees', 'Half Sarees'].includes(product.category);
   const stockQuantity = isSareeProduct
     ? 1
@@ -70,7 +71,8 @@ function normalizeProduct(product, index = 0) {
 
   return {
     ...product,
-    id: product.id || `prod-${Date.now()}-${index}`,
+    id,
+    _id: product._id || id,
     slug: product.slug || slugify(product.name || `product-${index}`),
     description: product.description || '',
     fabricDetails: product.fabricDetails || '',

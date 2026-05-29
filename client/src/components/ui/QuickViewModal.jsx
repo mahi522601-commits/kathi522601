@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCart } from '../../hooks/useCart';
 import { useWishlist } from '../../hooks/useWishlist';
 import { formatPrice } from '../../utils/formatPrice';
@@ -21,6 +21,12 @@ export default function QuickViewModal({ open, onClose, product }) {
   const [activeImage, setActiveImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState(product?.colors?.[0] || null);
   const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    setSelectedColor(product?.colors?.[0] || null);
+    setQuantity(1);
+    setActiveImage(0);
+  }, [product?.id, product?.slug]);
 
   if (!product) {
     return null;
