@@ -19,7 +19,7 @@ function resolveCardImage(image) {
     return image;
   }
 
-  return image.thumbnail || image.medium?.url || image.displayUrl || image.url || '';
+  return image.mediumUrl || image.medium?.url || image.displayUrl || image.url || image.thumbnail || '';
 }
 
 export default function ProductCard({ product, priority = false }) {

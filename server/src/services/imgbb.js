@@ -30,6 +30,7 @@ export async function uploadToImgBB(base64Data, name = 'product-image') {
     displayUrl: data.display_url,
     deleteUrl: data.delete_url,
     thumbnail: data.thumb?.url || data.medium?.url || data.url,
+    mediumUrl: data.medium?.url || data.display_url || data.url,
     width: Number(data.width || 0),
     height: Number(data.height || 0),
     size: Number(data.size || 0),

@@ -20,10 +20,11 @@ function normalizeImages(images = []) {
       return {
         id: image,
         url: image,
-        displayUrl: image,
-        thumbnail: image,
-        width: 1200,
-        height: 1600,
+      displayUrl: image,
+      thumbnail: image,
+      mediumUrl: image,
+      width: 1200,
+      height: 1600,
       };
     }
 
@@ -32,6 +33,7 @@ function normalizeImages(images = []) {
       url: image.url || image.displayUrl || image.thumbnail,
       displayUrl: image.displayUrl || image.url || image.thumbnail,
       thumbnail: image.thumbnail || image.displayUrl || image.url,
+      mediumUrl: image.mediumUrl || image.medium?.url || image.displayUrl || image.url || image.thumbnail,
       deleteUrl: image.deleteUrl,
       width: image.width || 1200,
       height: image.height || 1600,
@@ -225,6 +227,7 @@ export async function saveProduct(product) {
       url: image.url || image.displayUrl || image.thumbnail || image,
       displayUrl: image.displayUrl || image.url || image.thumbnail || image,
       thumbnail: image.thumbnail || image.displayUrl || image.url || image,
+      mediumUrl: image.mediumUrl || image.medium?.url || image.displayUrl || image.url || image.thumbnail || image,
       deleteUrl: image.deleteUrl,
       width: image.width || 1200,
       height: image.height || 1600,

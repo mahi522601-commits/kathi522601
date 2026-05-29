@@ -71,7 +71,7 @@ export default function QuickViewModal({ open, onClose, product }) {
                 </div>
                 <div className="mt-4 grid grid-cols-4 gap-3">
                   {images.slice(0, 4).map((image, index) => {
-                    const thumbnail = typeof image === 'string' ? image : image.thumbnail || image.displayUrl || image.url;
+                    const thumbnail = typeof image === 'string' ? image : image.mediumUrl || image.medium?.url || image.thumbnail || image.displayUrl || image.url;
                     return (
                     <button
                       key={`${image}-${index}`}

@@ -18,7 +18,7 @@ function resolveImageUrl(image) {
     return image;
   }
 
-  return image.thumbnail || image.medium?.url || image.displayUrl || image.url || '';
+  return image.displayUrl || image.url || image.medium?.url || image.thumbnail || '';
 }
 
 function resolvePreviewImageUrl(image) {
@@ -124,6 +124,12 @@ export default function HeroSection() {
     const image = new Image();
     image.decoding = 'async';
     image.src = nextSlide.imageUrl;
+
+    if (nextSlide.previewImageUrl && nextSlide.previewImageUrl !== nextSlide.imageUrl) {
+      const preview = new Image();
+      preview.decoding = 'async';
+      preview.src = nextSlide.previewImageUrl;
+    }
   }, [activeIndex, slides]);
 
   useEffect(() => {
@@ -302,7 +308,7 @@ export default function HeroSection() {
                   <SafeImage
                     src={activeSlide.imageUrl}
                     alt={activeSlide.title}
-                    className="h-full w-full object-contain object-center"
+                    className="h-full w-full object-contain object-center p-4 sm:p-6 lg:p-8"
                     loading="eager"
                     fetchPriority="high"
                     decoding="async"
