@@ -80,6 +80,20 @@ export async function createStoredOrder(payload) {
   const orders = await listDocuments('orders');
   const createdAt = payload.createdAt || new Date().toISOString();
   const initialStatus = payload.status || 'Pending';
+  const duplicateKey = payload.idempotencyKey || payload.transactionId || payload.paymentId || payload.gatewayOrderId;
+
+  if (duplicateKey) {
+    const existingOrder = orders.find((order) =>
+      [order.idempotencyKey, order.transactionId, order.paymentId, order.gatewayOrderId]
+        .filter(Boolean)
+        .includes(duplicateKey),
+    );
+
+    if (existingOrder) {
+      return existingOrder;
+    }
+  }
+
   const cartQuote = await quoteCartItems(payload.items, { strictStock: true });
   const items = cartQuote.items;
   const subtotal = cartQuote.subtotal;

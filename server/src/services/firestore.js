@@ -40,8 +40,14 @@ function normalizeDocument(name, id, data) {
   };
 }
 
-async function listFromFirestore(name) {
-  const snapshot = await adminDb.collection(name).get();
+async function listFromFirestore(name, options = {}) {
+  let query = adminDb.collection(name);
+
+  if (options.orderBy) {
+    query = query.orderBy(options.orderBy.field, options.orderBy.direction || 'asc');
+  }
+
+  const snapshot = await query.get();
   return snapshot.docs.map((doc) => serializeValue({ id: doc.id, ...doc.data() }));
 }
 
@@ -49,12 +55,23 @@ function listFromMemory(name) {
   return structuredClone(collections.get(name) || []);
 }
 
-export async function listDocuments(name) {
+export async function listDocuments(name, options = {}) {
   const collectionName = getCollectionName(name);
   if (adminDb && !env.useMockStore) {
-    return listFromFirestore(collectionName);
+    return listFromFirestore(collectionName, options);
   }
-  return listFromMemory(collectionName);
+  const items = listFromMemory(collectionName);
+
+  if (options.orderBy) {
+    const direction = options.orderBy.direction === 'asc' ? 1 : -1;
+    items.sort((left, right) => {
+      const leftValue = new Date(left[options.orderBy.field] || 0).getTime();
+      const rightValue = new Date(right[options.orderBy.field] || 0).getTime();
+      return (leftValue - rightValue) * direction;
+    });
+  }
+
+  return items;
 }
 
 export async function getDocument(name, id) {

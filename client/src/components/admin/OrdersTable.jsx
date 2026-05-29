@@ -1,12 +1,85 @@
-﻿import { useMemo, useState } from 'react';
-import { Download, Eye, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Download, Eye, ReceiptText, Search, X, ZoomIn, ZoomOut } from 'lucide-react';
 import OrderReceipt from '../receipt/OrderReceipt';
 import { formatPrice } from '../../utils/formatPrice';
 
-const statusOptions = ['Confirmed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered'];
+const statusOptions = [
+  'Pending',
+  'Paid',
+  'Confirmed',
+  'Packed',
+  'Shipped',
+  'Out for Delivery',
+  'Delivered',
+  'Cancelled',
+];
+
+const filterOptions = [
+  'All',
+  'Confirmed',
+  'Packed',
+  'Shipped',
+  'Out for Delivery',
+  'Delivered',
+  'Cancelled',
+];
+
+function getOrderId(order) {
+  return order?._id || order?.id || order?.orderNumber || '';
+}
+
+function getProofUrl(order) {
+  const image = order?.paymentScreenshot || order?.paymentScreenshotUrl || order?.paymentProofUrl;
+
+  if (!image) {
+    return '';
+  }
+
+  if (typeof image === 'string') {
+    return image;
+  }
+
+  return image.displayUrl || image.url || image.thumbnail || image.secure_url || '';
+}
+
+function getItemImage(item) {
+  const image = item?.image || item?.thumbnail || item?.productImage || item?.images?.[0];
+
+  if (!image) {
+    return '';
+  }
+
+  if (typeof image === 'string') {
+    return image;
+  }
+
+  return image.displayUrl || image.url || image.thumbnail || image.secure_url || '';
+}
+
+function getAddress(order) {
+  return [
+    order.address?.line1,
+    order.address?.line2,
+    order.address?.city,
+    order.address?.state,
+    order.address?.pincode,
+  ].filter(Boolean).join(', ');
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return 'Not available';
+  }
+
+  return new Intl.DateTimeFormat('en-IN', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(value));
+}
 
 function PaymentBadge({ status }) {
-  const paid = status === 'Paid';
+  const normalized = status || 'Pending';
+  const paid = normalized === 'Paid';
 
   return (
     <span
@@ -14,7 +87,27 @@ function PaymentBadge({ status }) {
         paid ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
       }`}
     >
-      {status || 'Pending'}
+      {normalized}
+    </span>
+  );
+}
+
+function StatusBadge({ status }) {
+  const normalized = status || 'Pending';
+  const cancelled = normalized === 'Cancelled';
+  const delivered = normalized === 'Delivered';
+
+  return (
+    <span
+      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] ${
+        cancelled
+          ? 'bg-rose-100 text-rose-700'
+          : delivered
+            ? 'bg-emerald-100 text-emerald-700'
+            : 'bg-cream text-primary'
+      }`}
+    >
+      {normalized}
     </span>
   );
 }
@@ -27,59 +120,53 @@ function escapeCsv(value) {
 function exportOrdersCsv(orders) {
   const headers = [
     'Order ID',
+    'Database ID',
     'Customer Name',
+    'Email',
     'Phone',
-    'Address',
-    'Product Names',
-    'Quantity',
+    'Shipping Address',
+    'Products',
+    'Total Quantity',
     'Total Amount',
+    'Payment Method',
     'Payment Status',
-    'Delivery Status',
-    'Order Date',
+    'Order Status',
+    'Order Date Time',
+    'Payment Screenshot',
   ];
   const rows = orders.map((order) => [
-    order.orderNumber || order.id,
+    order.orderNumber || getOrderId(order),
+    getOrderId(order),
     order.customerName,
+    order.email,
     order.phone,
-    [
-      order.address?.line1,
-      order.address?.line2,
-      order.address?.city,
-      order.address?.state,
-      order.address?.pincode,
-    ].filter(Boolean).join(', '),
-    order.items?.map((item) => item.name).join(' | '),
-    order.items?.reduce((sum, item) => sum + Number(item.qty || 0), 0),
-    order.total,
+    getAddress(order),
+    order.items?.map((item) => `${item.name || item.productId} x ${item.qty || item.quantity || 0}`).join(' | '),
+    order.items?.reduce((sum, item) => sum + Number(item.qty || item.quantity || 0), 0),
+    order.total ?? order.pricing?.total,
+    order.paymentMethod || order.paymentGateway || 'Not available',
     order.paymentStatus || 'Pending',
-    order.deliveryStatus || order.status,
-    order.createdAt ? new Date(order.createdAt).toLocaleString('en-IN') : '',
+    order.status || order.deliveryStatus || 'Pending',
+    order.createdAt ? formatDateTime(order.createdAt) : '',
+    getProofUrl(order),
   ]);
   const csv = [headers, ...rows].map((row) => row.map(escapeCsv).join(',')).join('\r\n');
   const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `khyathi-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = `khyathi-all-orders-${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
 }
 
-function imageUrl(image) {
-  if (!image) {
-    return '';
-  }
-
-  if (typeof image === 'string') {
-    return image;
-  }
-
-  return image.displayUrl || image.url || image.thumbnail || image.secure_url || '';
-}
-
 function downloadImage(url, orderNumber) {
+  if (!url) {
+    return;
+  }
+
   const link = document.createElement('a');
   link.href = url;
   link.download = `${orderNumber || 'order'}-payment-proof.jpg`;
@@ -93,70 +180,111 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [receiptOrder, setReceiptOrder] = useState(null);
   const [proofPreview, setProofPreview] = useState(null);
+  const [proofZoom, setProofZoom] = useState(1);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
+  useEffect(() => {
+    if (!selectedOrder) {
+      return;
+    }
+
+    const freshOrder = orders.find((order) => getOrderId(order) === getOrderId(selectedOrder));
+    if (freshOrder) {
+      setSelectedOrder((current) => ({ ...freshOrder, status: current.status || freshOrder.status }));
+    }
+  }, [orders]);
+
+  useEffect(() => {
+    setProofZoom(1);
+  }, [proofPreview]);
+
   const filteredOrders = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
     return orders.filter((order) => {
-      if (statusFilter !== 'All' && order.status !== statusFilter) {
+      const status = order.status || order.deliveryStatus || 'Pending';
+      if (statusFilter !== 'All' && status !== statusFilter) {
         return false;
       }
 
-      const haystack = `${order.orderNumber} ${order.customerName}`.toLowerCase();
-      if (search && !haystack.includes(search.toLowerCase())) {
-        return false;
+      if (!query) {
+        return true;
       }
 
-      return true;
+      const haystack = [
+        order.orderNumber,
+        getOrderId(order),
+        order.customerName,
+        order.phone,
+      ].filter(Boolean).join(' ').toLowerCase();
+
+      return haystack.includes(query);
     });
   }, [orders, search, statusFilter]);
 
+  async function saveSelectedStatus() {
+    if (!selectedOrder) {
+      return;
+    }
+
+    const savedOrder = await onSaveStatus(getOrderId(selectedOrder), selectedOrder.status);
+    if (savedOrder) {
+      setSelectedOrder(savedOrder);
+    }
+  }
+
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center">
-        <input
-          className="input-shell"
-          placeholder="Search order number or customer"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-        <div className="flex flex-wrap gap-2">
-          {['All', ...statusOptions].map((status) => (
-            <button
-              key={status}
-              type="button"
-              onClick={() => setStatusFilter(status)}
-              className={`rounded-full px-4 py-3 text-sm font-semibold ${
-                statusFilter === status ? 'bg-primary text-white' : 'bg-white text-primary'
-              } border border-borderwarm`}
-            >
-              {status}
-            </button>
-          ))}
+      <div className="rounded-[1.4rem] border border-borderwarm bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+          <label className="relative flex-1">
+            <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={17} />
+            <input
+              className="input-shell pl-11"
+              placeholder="Search order ID, customer, or phone"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
+          <div className="flex gap-2 overflow-x-auto pb-1 xl:pb-0">
+            {filterOptions.map((status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setStatusFilter(status)}
+                className={`whitespace-nowrap rounded-full border border-borderwarm px-4 py-3 text-sm font-semibold ${
+                  statusFilter === status ? 'bg-primary text-white' : 'bg-white text-primary'
+                }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="action-button gap-2"
+            onClick={() => exportOrdersCsv(orders)}
+            disabled={!orders.length}
+          >
+            <Download size={16} />
+            Export All CSV
+          </button>
         </div>
-        <button
-          type="button"
-          className="action-button ml-auto gap-2"
-          onClick={() => exportOrdersCsv(filteredOrders)}
-          disabled={!filteredOrders.length}
-        >
-          <Download size={16} />
-          Export CSV
-        </button>
       </div>
 
-      <div className="overflow-hidden rounded-[1.4rem] border border-borderwarm bg-white">
-        <div className="overflow-auto">
-          <table className="min-w-full text-left text-sm">
+      <div className="overflow-hidden rounded-[1.4rem] border border-borderwarm bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="min-w-[1180px] text-left text-sm">
             <thead className="bg-cream text-primary">
               <tr>
-                <th className="px-4 py-4 font-semibold">Order ID</th>
+                <th className="px-4 py-4 font-semibold">Order</th>
                 <th className="px-4 py-4 font-semibold">Customer</th>
-                <th className="px-4 py-4 font-semibold">Date</th>
+                <th className="px-4 py-4 font-semibold">Products</th>
                 <th className="px-4 py-4 font-semibold">Total</th>
                 <th className="px-4 py-4 font-semibold">Payment</th>
-                <th className="px-4 py-4 font-semibold">Status</th>
-                <th className="px-4 py-4 font-semibold">Proof</th>
+                <th className="px-4 py-4 font-semibold">Order Status</th>
+                <th className="px-4 py-4 font-semibold">Payment Proof</th>
                 <th className="px-4 py-4 font-semibold">Receipt</th>
               </tr>
             </thead>
@@ -167,56 +295,70 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                     Loading orders...
                   </td>
                 </tr>
-              ) : filteredOrders.length ? filteredOrders.map((order) => (
-                <tr
-                  key={order.id}
-                  className="cursor-pointer border-t border-borderwarm transition hover:bg-[#fcf8f2]"
-                  onClick={() => setSelectedOrder(order)}
-                >
-                  <td className="px-4 py-4 font-semibold text-primary">{order.orderNumber}</td>
-                  <td className="px-4 py-4">{order.customerName}</td>
-                  <td className="px-4 py-4">{new Date(order.createdAt).toLocaleDateString()}</td>
-                  <td className="px-4 py-4">{formatPrice(order.total)}</td>
-                  <td className="px-4 py-4">
-                    {imageUrl(order.paymentScreenshot || order.paymentScreenshotUrl || order.paymentProofUrl) ? (
+              ) : filteredOrders.length ? filteredOrders.map((order) => {
+                const proofUrl = getProofUrl(order);
+                const totalQuantity = order.items?.reduce((sum, item) => sum + Number(item.qty || item.quantity || 0), 0) || 0;
+
+                return (
+                  <tr
+                    key={getOrderId(order)}
+                    className="cursor-pointer border-t border-borderwarm align-top transition hover:bg-[#fcf8f2]"
+                    onClick={() => setSelectedOrder(order)}
+                  >
+                    <td className="px-4 py-4">
+                      <p className="font-semibold text-primary">{order.orderNumber || getOrderId(order)}</p>
+                      <p className="mt-1 text-xs text-muted">{formatDateTime(order.createdAt)}</p>
+                    </td>
+                    <td className="px-4 py-4">
+                      <p className="font-semibold text-body">{order.customerName || 'Customer'}</p>
+                      <p className="mt-1 text-xs text-muted">{order.email || 'No email'}</p>
+                      <p className="mt-1 text-xs text-muted">{order.phone || 'No phone'}</p>
+                    </td>
+                    <td className="px-4 py-4">
+                      <p className="font-semibold text-primary">{order.items?.length || 0} item types</p>
+                      <p className="mt-1 text-xs text-muted">Qty {totalQuantity}</p>
+                    </td>
+                    <td className="px-4 py-4 font-semibold text-primary">{formatPrice(order.total ?? order.pricing?.total)}</td>
+                    <td className="px-4 py-4">
+                      <PaymentBadge status={order.paymentStatus} />
+                      <p className="mt-2 text-xs text-muted">{order.paymentMethod || order.paymentGateway || 'Manual'}</p>
+                    </td>
+                    <td className="px-4 py-4">
+                      <StatusBadge status={order.status || order.deliveryStatus} />
+                    </td>
+                    <td className="px-4 py-4">
+                      {proofUrl ? (
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-2 rounded-full border border-borderwarm px-3 py-2 text-xs font-semibold text-primary"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setProofPreview(order);
+                          }}
+                        >
+                          <Eye size={14} />
+                          View
+                        </button>
+                      ) : (
+                        <span className="text-xs text-muted">Not uploaded</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-4">
                       <button
                         type="button"
-                        className="inline-flex items-center gap-2 rounded-full border border-borderwarm px-3 py-2 text-xs font-semibold text-primary"
+                        className="action-button-outline gap-2 px-3 py-2 text-xs"
                         onClick={(event) => {
                           event.stopPropagation();
-                          setProofPreview(order);
+                          setReceiptOrder(order);
                         }}
                       >
-                        <Eye size={14} />
-                        View Screenshot
+                        <ReceiptText size={14} />
+                        View
                       </button>
-                    ) : (
-                      <span className="text-xs text-muted">None</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-4">
-                    <PaymentBadge status={order.paymentStatus} />
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="space-y-1">
-                      <p className="font-semibold text-primary">{order.status}</p>
-                      <p className="text-xs text-muted">{order.deliveryStatus || order.status}</p>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <button
-                      type="button"
-                      className="action-button-outline px-3 py-2 text-xs"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setReceiptOrder(order);
-                      }}
-                    >
-                      View
-                    </button>
-                  </td>
-                </tr>
-              )) : (
+                    </td>
+                  </tr>
+                );
+              }) : (
                 <tr>
                   <td className="px-4 py-8 text-center text-muted" colSpan={8}>
                     No orders found.
@@ -229,22 +371,21 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
       </div>
 
       {selectedOrder ? (
-        <div className="rounded-[1.6rem] border border-borderwarm bg-white p-6">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="rounded-[1.6rem] border border-borderwarm bg-white p-4 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div>
-              <p className="font-heading text-3xl text-primary">{selectedOrder.orderNumber}</p>
-              <p className="mt-1 text-sm text-muted">{selectedOrder.customerName}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-dark">Order details</p>
+              <p className="mt-1 font-heading text-3xl text-primary">{selectedOrder.orderNumber || getOrderId(selectedOrder)}</p>
+              <p className="mt-1 text-sm text-muted">Placed {formatDateTime(selectedOrder.createdAt)}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <PaymentBadge status={selectedOrder.paymentStatus} />
-                <span className="rounded-full bg-cream px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-                  Delivery: {selectedOrder.deliveryStatus || selectedOrder.status}
-                </span>
+                <StatusBadge status={selectedOrder.status || selectedOrder.deliveryStatus} />
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <select
                 className="rounded-full border border-borderwarm bg-white px-4 py-3 text-sm outline-none"
-                value={selectedOrder.status}
+                value={selectedOrder.status || 'Pending'}
                 onChange={(event) =>
                   setSelectedOrder((current) => ({ ...current, status: event.target.value }))
                 }
@@ -257,97 +398,130 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
               </select>
               <button
                 type="button"
-                className="action-button-outline"
+                className="action-button-outline gap-2"
                 onClick={() => setReceiptOrder(selectedOrder)}
               >
-                View Receipt
+                <ReceiptText size={16} />
+                Receipt
               </button>
               <button
                 type="button"
                 className="action-button"
-                onClick={() => onSaveStatus(selectedOrder.id, selectedOrder.status)}
-                disabled={savingOrderId === selectedOrder.id}
+                onClick={saveSelectedStatus}
+                disabled={savingOrderId === getOrderId(selectedOrder)}
               >
-                {savingOrderId === selectedOrder.id ? 'Saving...' : 'Save Status'}
+                {savingOrderId === getOrderId(selectedOrder) ? 'Saving...' : 'Save Status'}
               </button>
             </div>
           </div>
 
-          <div className="mt-6 grid gap-6 lg:grid-cols-2">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Items</p>
-              <div className="mt-3 space-y-3">
-                {selectedOrder.items?.map((item) => (
-                  <div key={`${item.productId}-${item.color}`} className="rounded-[1.2rem] bg-cream p-4">
-                    <p className="font-semibold text-primary">{item.name}</p>
-                    <p className="mt-1 text-sm text-muted">
-                      {item.color} â€¢ Qty {item.qty}
-                    </p>
-                  </div>
-                ))}
+          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            <div className="rounded-[1.2rem] bg-cream p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Customer</p>
+              <div className="mt-3 space-y-1 text-sm leading-6 text-body">
+                <p className="font-semibold text-primary">{selectedOrder.customerName || 'Customer'}</p>
+                <p>{selectedOrder.email || 'No email'}</p>
+                <p>{selectedOrder.phone || 'No phone'}</p>
               </div>
             </div>
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Shipping Address</p>
-              <div className="mt-3 rounded-[1.2rem] bg-cream p-4 text-sm leading-7 text-body">
-                <p>{selectedOrder.customerName}</p>
-                <p>{selectedOrder.phone}</p>
-                <p>
-                  {selectedOrder.address?.line1}, {selectedOrder.address?.line2}
-                </p>
-                <p>
-                  {selectedOrder.address?.city}, {selectedOrder.address?.state} - {selectedOrder.address?.pincode}
-                </p>
+            <div className="rounded-[1.2rem] bg-cream p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Shipping Address</p>
+              <p className="mt-3 text-sm leading-6 text-body">{getAddress(selectedOrder) || 'No address saved'}</p>
+            </div>
+            <div className="rounded-[1.2rem] bg-cream p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Payment</p>
+              <div className="mt-3 space-y-1 text-sm leading-6 text-body">
+                <p>Method: <span className="font-semibold text-primary">{selectedOrder.paymentMethod || selectedOrder.paymentGateway || 'Manual'}</span></p>
+                <p>Status: <span className="font-semibold text-primary">{selectedOrder.paymentStatus || 'Pending'}</span></p>
+                <p>Total: <span className="font-semibold text-primary">{formatPrice(selectedOrder.total ?? selectedOrder.pricing?.total)}</span></p>
               </div>
             </div>
-            <div className="lg:col-span-2">
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Payment Screenshot</p>
-              {imageUrl(selectedOrder.paymentScreenshot || selectedOrder.paymentScreenshotUrl || selectedOrder.paymentProofUrl) ? (
-                <div className="mt-3 grid gap-4 rounded-[1.2rem] bg-cream p-4 sm:grid-cols-[160px_1fr]">
-                  <img
-                    src={imageUrl(selectedOrder.paymentScreenshot || selectedOrder.paymentScreenshotUrl || selectedOrder.paymentProofUrl)}
-                    alt={`Payment proof for ${selectedOrder.orderNumber}`}
-                    className="h-44 w-full rounded-xl object-contain sm:h-40"
-                    loading="lazy"
-                  />
-                  <div className="flex flex-col justify-center gap-3">
-                    <p className="text-sm text-body">
-                      Uploaded payment proof for admin verification.
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <button type="button" className="action-button-outline px-4 py-2 text-xs" onClick={() => setProofPreview(selectedOrder)}>
-                        Preview
-                      </button>
-                      <button
-                        type="button"
-                        className="action-button px-4 py-2 text-xs"
-                        onClick={() => downloadImage(imageUrl(selectedOrder.paymentScreenshot || selectedOrder.paymentScreenshotUrl || selectedOrder.paymentProofUrl), selectedOrder.orderNumber)}
-                      >
-                        Download
-                      </button>
+          </div>
+
+          <div className="mt-6">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Ordered Products</p>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              {selectedOrder.items?.map((item, index) => {
+                const itemImage = getItemImage(item);
+                return (
+                  <div key={`${item.productId || item.name}-${item.color || index}`} className="flex gap-3 rounded-[1.2rem] bg-cream p-3">
+                    {itemImage ? (
+                      <img src={itemImage} alt={item.name || 'Ordered product'} className="h-20 w-16 rounded-xl object-cover" loading="lazy" />
+                    ) : (
+                      <div className="h-20 w-16 rounded-xl bg-white" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 font-semibold text-primary">{item.name || item.productId}</p>
+                      <p className="mt-1 text-sm text-muted">{item.color || 'Default'} | Qty {item.qty || item.quantity || 0}</p>
+                      <p className="mt-1 text-sm font-semibold text-primary">{formatPrice(item.lineTotal || Number(item.salePrice || item.price || 0) * Number(item.qty || item.quantity || 0))}</p>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <div className="mt-3 rounded-[1.2rem] bg-cream p-4 text-sm text-muted">
-                  No payment screenshot uploaded for this order.
-                </div>
-              )}
+                );
+              })}
             </div>
+          </div>
+
+          <div className="mt-6">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Payment Screenshot</p>
+            {getProofUrl(selectedOrder) ? (
+              <div className="mt-3 grid gap-4 rounded-[1.2rem] bg-cream p-4 sm:grid-cols-[180px_1fr]">
+                <img
+                  src={getProofUrl(selectedOrder)}
+                  alt={`Payment proof for ${selectedOrder.orderNumber || getOrderId(selectedOrder)}`}
+                  className="h-44 w-full rounded-xl bg-white object-contain"
+                  loading="lazy"
+                />
+                <div className="flex flex-col justify-center gap-3">
+                  <p className="text-sm text-body">Uploaded payment proof is available for admin verification.</p>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" className="action-button-outline px-4 py-2 text-xs" onClick={() => setProofPreview(selectedOrder)}>
+                      Preview
+                    </button>
+                    <button
+                      type="button"
+                      className="action-button px-4 py-2 text-xs"
+                      onClick={() => downloadImage(getProofUrl(selectedOrder), selectedOrder.orderNumber)}
+                    >
+                      Download
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-3 rounded-[1.2rem] bg-cream p-4 text-sm text-muted">
+                No payment screenshot uploaded for this order.
+              </div>
+            )}
           </div>
         </div>
       ) : null}
 
       {proofPreview ? (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm">
-          <div className="w-full max-w-3xl rounded-[1.4rem] bg-white p-4 shadow-2xl">
+          <div className="flex max-h-full w-full max-w-5xl flex-col rounded-[1.4rem] bg-white p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="font-semibold text-primary">{proofPreview.orderNumber} payment proof</p>
+              <p className="font-semibold text-primary">{proofPreview.orderNumber || getOrderId(proofPreview)} payment proof</p>
               <div className="flex gap-2">
                 <button
                   type="button"
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-borderwarm text-primary"
-                  onClick={() => downloadImage(imageUrl(proofPreview.paymentScreenshot || proofPreview.paymentScreenshotUrl || proofPreview.paymentProofUrl), proofPreview.orderNumber)}
+                  onClick={() => setProofZoom((current) => Math.max(0.6, Number((current - 0.2).toFixed(1))))}
+                  aria-label="Zoom out payment proof"
+                >
+                  <ZoomOut size={16} />
+                </button>
+                <button
+                  type="button"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-borderwarm text-primary"
+                  onClick={() => setProofZoom((current) => Math.min(3, Number((current + 0.2).toFixed(1))))}
+                  aria-label="Zoom in payment proof"
+                >
+                  <ZoomIn size={16} />
+                </button>
+                <button
+                  type="button"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-borderwarm text-primary"
+                  onClick={() => downloadImage(getProofUrl(proofPreview), proofPreview.orderNumber)}
                   aria-label="Download payment proof"
                 >
                   <Download size={16} />
@@ -362,11 +536,14 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                 </button>
               </div>
             </div>
-            <img
-              src={imageUrl(proofPreview.paymentScreenshot || proofPreview.paymentScreenshotUrl || proofPreview.paymentProofUrl)}
-              alt={`Payment proof for ${proofPreview.orderNumber}`}
-              className="max-h-[78vh] w-full rounded-[1rem] object-contain"
-            />
+            <div className="max-h-[78vh] overflow-auto rounded-[1rem] bg-[#120b07] p-3">
+              <img
+                src={getProofUrl(proofPreview)}
+                alt={`Payment proof for ${proofPreview.orderNumber || getOrderId(proofPreview)}`}
+                className="mx-auto max-w-none rounded-[1rem] object-contain transition-transform"
+                style={{ width: `${proofZoom * 100}%` }}
+              />
+            </div>
           </div>
         </div>
       ) : null}

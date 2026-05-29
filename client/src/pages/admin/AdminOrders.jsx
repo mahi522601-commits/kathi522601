@@ -1,5 +1,5 @@
 ﻿import { Helmet } from 'react-helmet-async';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import OrdersTable from '../../components/admin/OrdersTable';
@@ -10,12 +10,30 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [savingOrderId, setSavingOrderId] = useState('');
 
-  useEffect(() => {
-    getOrders()
-      .then(setOrders)
-      .catch(() => toast.error('Unable to load orders'))
-      .finally(() => setLoading(false));
+  const loadOrders = useCallback(async ({ quiet = false } = {}) => {
+    if (!quiet) {
+      setLoading(true);
+    }
+
+    try {
+      const nextOrders = await getOrders();
+      setOrders(nextOrders);
+    } catch {
+      if (!quiet) {
+        toast.error('Unable to load orders');
+      }
+    } finally {
+      if (!quiet) {
+        setLoading(false);
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    loadOrders();
+    const interval = window.setInterval(() => loadOrders({ quiet: true }), 15000);
+    return () => window.clearInterval(interval);
+  }, [loadOrders]);
 
   async function saveStatus(orderId, status) {
     setSavingOrderId(orderId);
@@ -23,12 +41,14 @@ export default function AdminOrders() {
       const savedOrder = await updateOrderStatus(orderId, status);
       setOrders((current) =>
         current.map((order) =>
-          order.id === orderId ? { ...order, ...savedOrder } : order,
-        ),
+          order.id === orderId || order._id === orderId ? { ...order, ...savedOrder } : order,
+        ).sort((left, right) => new Date(right.createdAt || 0) - new Date(left.createdAt || 0)),
       );
       toast.success('Order status updated');
+      return savedOrder;
     } catch (error) {
       toast.error(error.message || 'Unable to update order');
+      return null;
     } finally {
       setSavingOrderId('');
     }

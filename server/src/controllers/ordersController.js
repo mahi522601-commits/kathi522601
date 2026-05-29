@@ -3,18 +3,23 @@ import { createStoredOrder } from '../services/orderRecords.js';
 
 export async function getOrders(req, res, next) {
   try {
+    res.set('Cache-Control', 'no-store');
+
     const allOrders = await listDocuments('orders');
     const { userId, mine } = req.query;
+    const isAdmin = req.user?.role === 'admin';
 
     let orders = allOrders;
 
-    if (req.user?.role !== 'admin' || mine === 'true') {
+    if (!isAdmin || mine === 'true') {
       orders = allOrders.filter((order) => order.userId === req.user?.uid);
     } else if (userId) {
       orders = allOrders.filter((order) => order.userId === userId);
     }
 
-    orders.sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt));
+    orders = orders
+      .map((order) => ({ ...order, _id: order._id || order.id }))
+      .sort((left, right) => new Date(right.createdAt || 0) - new Date(left.createdAt || 0));
 
     res.json({ success: true, orders });
   } catch (error) {

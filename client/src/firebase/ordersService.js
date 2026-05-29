@@ -17,12 +17,15 @@ function writeLocalOrders(orders) {
 function normalizeOrder(order) {
   const createdAt = order.createdAt || new Date().toISOString();
   const status = order.status || 'Pending';
+  const id = order.id || order._id;
   const receiptNumber =
     order.receiptNumber ||
-    `KC-RCPT-${new Date(createdAt).getFullYear()}-${String(order.orderNumber || order.id || Date.now()).slice(-4)}`;
+    `KC-RCPT-${new Date(createdAt).getFullYear()}-${String(order.orderNumber || id || Date.now()).slice(-4)}`;
 
   return {
     ...order,
+    id,
+    _id: order._id || id,
     status,
     deliveryStatus: order.deliveryStatus || status,
     receiptNumber,
@@ -91,7 +94,9 @@ export async function placeOrder(order) {
 export async function getOrders() {
   try {
     const orders = await ordersApi.list();
-    return orders.map(normalizeOrder);
+    return orders
+      .map(normalizeOrder)
+      .sort((left, right) => new Date(right.createdAt || 0) - new Date(left.createdAt || 0));
   } catch (error) {
     if (import.meta.env.DEV) {
       console.warn('Falling back to local orders.', error);
