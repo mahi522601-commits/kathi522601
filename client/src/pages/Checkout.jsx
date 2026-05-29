@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, ImagePlus, ShieldCheck, Smartphone } from 'lucide-react';
+import { Check, ImagePlus, QrCode, ShieldCheck, Smartphone } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -36,15 +36,22 @@ const PAYMENT_APPS = [
   },
 ];
 
-function buildUpiUrl(app, amount) {
-  const params = new URLSearchParams({
+function buildUpiParams(amount) {
+  return new URLSearchParams({
     pa: siteConfig.upiId,
     pn: siteConfig.upiName,
     am: Number(amount || 0).toFixed(2),
     cu: 'INR',
     tn: 'Khyathi Collections order payment',
-  });
-  const query = params.toString();
+  }).toString();
+}
+
+function buildGenericUpiUrl(amount) {
+  return `upi://pay?${buildUpiParams(amount)}`;
+}
+
+function buildUpiUrl(app, amount) {
+  const query = buildUpiParams(amount);
 
   if (app.id === 'phonepe') {
     return `phonepe://pay?${query}`;
@@ -57,6 +64,11 @@ function buildUpiUrl(app, amount) {
   }
 
   return `upi://pay?${query}`;
+}
+
+function buildUpiQrUrl(amount) {
+  const data = encodeURIComponent(buildGenericUpiUrl(amount));
+  return `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=10&data=${data}`;
 }
 
 function resolveImageUrl(image) {
@@ -117,6 +129,7 @@ export default function Checkout() {
   }, [paymentScreenshot]);
 
   const total = useMemo(() => subtotal - (coupon?.discountAmount || 0), [coupon, subtotal]);
+  const upiQrUrl = useMemo(() => buildUpiQrUrl(total), [total]);
 
   async function applyCoupon() {
     try {
@@ -438,6 +451,20 @@ export default function Checkout() {
                     <a className="action-button mt-4 w-full py-3 text-sm sm:w-auto" href={buildUpiUrl(selectedPaymentApp, total)}>
                       Open {selectedPaymentApp.name} and Pay
                     </a>
+                  </div>
+
+                  <div className="grid gap-4 rounded-[16px] border border-borderwarm bg-white p-4 sm:grid-cols-[150px_1fr] sm:items-center">
+                    <div className="mx-auto flex h-36 w-36 items-center justify-center rounded-[14px] border border-borderwarm bg-white p-2 shadow-sm">
+                      <img src={upiQrUrl} alt={`UPI QR code for ${siteConfig.upiName}`} className="h-full w-full object-contain" />
+                    </div>
+                    <div className="text-center sm:text-left">
+                      <p className="inline-flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-gold-dark sm:justify-start">
+                        <QrCode size={15} />
+                        Scan & Pay
+                      </p>
+                      <p className="mt-2 font-semibold text-primary">{formatPrice(total)} to {siteConfig.upiName}</p>
+                      <p className="mt-1 break-all text-sm text-muted">{siteConfig.upiId}</p>
+                    </div>
                   </div>
 
                   <label className="block rounded-[16px] border border-dashed border-gold bg-white p-4 text-center sm:p-5">
