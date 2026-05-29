@@ -6,6 +6,7 @@ import { env } from './environment.js';
 let adminApp = null;
 let adminAuth = null;
 let adminDb = null;
+let firebaseInitError = null;
 
 if (env.hasFirebaseAdminConfig) {
   try {
@@ -21,8 +22,9 @@ if (env.hasFirebaseAdminConfig) {
     adminAuth = getAuth(adminApp);
     adminDb = getFirestore(adminApp);
   } catch (error) {
+    firebaseInitError = error;
     console.warn('Unable to initialize Firebase Admin. Falling back to mock datastore.', error);
   }
 }
 
-export { adminApp, adminAuth, adminDb };
+export { adminApp, adminAuth, adminDb, firebaseInitError };

@@ -3,9 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
-import { env } from './config/environment.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
+import { getDatastoreStatus } from './services/firestore.js';
 
 import productsRouter from './routes/products.js';
 import ordersRouter from './routes/orders.js';
@@ -52,10 +52,13 @@ app.use((req, res, next) => {
 
 /* HEALTH */
 app.get('/api/health', (req, res) => {
+  const datastore = getDatastoreStatus();
+
   res.json({
     status: 'ok',
     time: new Date().toISOString(),
-    mockStore: env.useMockStore,
+    mockStore: datastore.mockStore,
+    datastore,
   });
 });
 

@@ -1,4 +1,6 @@
 import { createDocument, getDocument, listDocuments, updateDocument } from './firestore.js';
+import { adminDb } from '../config/firebase.js';
+import { env } from '../config/environment.js';
 import {
   normalizeCouponCode,
   sanitizeCoupon,
@@ -43,6 +45,32 @@ function addMonths(date, months) {
 
 function buildRewardCouponCode(orderCount) {
   return `KCLOVE${String(orderCount + 1).padStart(4, '0')}`;
+}
+
+async function reserveOrderSequence(orders, year) {
+  const currentFromOrders = Math.max(
+    getNextSequence(orders, 'orderNumber', year) - 1,
+    getNextSequence(orders, 'receiptNumber', year) - 1,
+  );
+
+  if (!adminDb || env.useMockStore) {
+    return currentFromOrders + 1;
+  }
+
+  const counterRef = adminDb.collection('_counters').doc(`orders-${year}`);
+  return adminDb.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(counterRef);
+    const currentValue = Number(snapshot.exists ? snapshot.data()?.value : currentFromOrders);
+    const nextValue = Math.max(currentValue, currentFromOrders) + 1;
+
+    transaction.set(counterRef, {
+      value: nextValue,
+      year,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+
+    return nextValue;
+  });
 }
 
 async function reserveOrderStock(items) {
@@ -160,9 +188,15 @@ export async function createStoredOrder(payload) {
   await reserveOrderStock(items);
 
   const orderYear = new Date(createdAt).getFullYear();
-  const orderSequence = getNextSequence(orders, 'orderNumber', orderYear);
-  const receiptSequence = getNextSequence(orders, 'receiptNumber', orderYear);
-  const receiptNumber = safePayload.receiptNumber || buildReceiptNumber(receiptSequence - 1);
+  const orderSequence = await reserveOrderSequence(orders, orderYear);
+  const orderNumber = normalizedPayload.orderNumber || buildOrderNumber(orderSequence - 1);
+  const receiptNumber = safePayload.receiptNumber || buildReceiptNumber(orderSequence - 1);
+  const paymentProofUrl =
+    normalizedPayload.paymentProofUrl ||
+    normalizedPayload.paymentScreenshotUrl ||
+    normalizedPayload.paymentScreenshot?.displayUrl ||
+    normalizedPayload.paymentScreenshot?.url ||
+    '';
   const shouldCreateRewardCoupon = Array.isArray(normalizedPayload.items) && normalizedPayload.items.length > 0;
   const rewardCoupon = shouldCreateRewardCoupon
     ? {
@@ -189,8 +223,12 @@ export async function createStoredOrder(payload) {
 
   return createDocument('orders', {
     ...normalizedPayload,
-    orderNumber: normalizedPayload.orderNumber || buildOrderNumber(orderSequence - 1),
+    orderNumber,
     receiptNumber,
+    receiptId: normalizedPayload.receiptId || receiptNumber,
+    paymentProof: normalizedPayload.paymentProof || normalizedPayload.paymentScreenshot || null,
+    paymentProofUrl,
+    paymentScreenshotUrl: normalizedPayload.paymentScreenshotUrl || paymentProofUrl,
     transactionId:
       normalizedPayload.transactionId ||
       normalizedPayload.paymentId ||

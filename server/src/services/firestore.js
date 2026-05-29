@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { adminDb } from '../config/firebase.js';
+import { adminDb, firebaseInitError } from '../config/firebase.js';
 import { env } from '../config/environment.js';
 import { seedData } from '../data/seedData.js';
 
@@ -55,11 +55,35 @@ function listFromMemory(name) {
   return structuredClone(collections.get(name) || []);
 }
 
+export function getDatastoreStatus() {
+  const usingFirestore = Boolean(adminDb && !env.useMockStore);
+  return {
+    mode: usingFirestore ? 'firestore' : 'memory',
+    firestoreReady: Boolean(adminDb),
+    mockStore: !usingFirestore,
+    configuredForFirebase: env.hasFirebaseAdminConfig,
+    initError: firebaseInitError?.message || '',
+  };
+}
+
+function assertPersistentStoreAvailable() {
+  if (env.nodeEnv === 'production' && (!adminDb || env.useMockStore)) {
+    const error = new Error(
+      firebaseInitError
+        ? `Firebase Admin failed to initialize: ${firebaseInitError.message}`
+        : 'Firebase Admin is not configured. Refusing to use in-memory order storage in production.'
+    );
+    error.status = 503;
+    throw error;
+  }
+}
+
 export async function listDocuments(name, options = {}) {
   const collectionName = getCollectionName(name);
   if (adminDb && !env.useMockStore) {
     return listFromFirestore(collectionName, options);
   }
+  assertPersistentStoreAvailable();
   const items = listFromMemory(collectionName);
 
   if (options.orderBy) {
@@ -88,6 +112,7 @@ export async function createDocument(name, data, customId) {
     await adminDb.collection(collectionName).doc(id).set(document, { merge: true });
     return document;
   }
+  assertPersistentStoreAvailable();
 
   const current = listFromMemory(collectionName);
   current.unshift(document);
@@ -112,6 +137,7 @@ export async function updateDocument(name, id, patch) {
     await adminDb.collection(collectionName).doc(id).set(updated, { merge: true });
     return updated;
   }
+  assertPersistentStoreAvailable();
 
   const next = listFromMemory(collectionName).map((item) => (item.id === id ? updated : item));
   collections.set(collectionName, next);
@@ -125,6 +151,7 @@ export async function deleteDocument(name, id) {
     await adminDb.collection(collectionName).doc(id).delete();
     return true;
   }
+  assertPersistentStoreAvailable();
 
   const next = listFromMemory(collectionName).filter((item) => item.id !== id && item.code !== id);
   collections.set(collectionName, next);
