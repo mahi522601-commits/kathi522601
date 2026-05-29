@@ -1,5 +1,6 @@
-import { createContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import cartApi from '../api/cartApi';
 import { mergeUserProfile } from '../firebase/authService';
 import { useAuth } from '../hooks/useAuth';
 
@@ -7,45 +8,139 @@ const CART_KEY = 'khyathi-cart';
 
 export const CartContext = createContext(null);
 
+function normalizeStoredItem(item = {}) {
+  return {
+    productId: String(item.productId || item.id || '').trim(),
+    color: String(item.color || '').trim(),
+    qty: Math.max(1, Math.floor(Number(item.qty || item.quantity || 1))),
+  };
+}
+
+function readStoredCart() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    return Array.isArray(parsed)
+      ? parsed.map(normalizeStoredItem).filter((item) => item.productId)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function sameCartItems(left = [], right = []) {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  return left.every((item, index) =>
+    item.productId === right[index]?.productId &&
+    item.color === right[index]?.color &&
+    item.qty === right[index]?.qty,
+  );
+}
+
+function resolveImage(product) {
+  const image = product.imageObjects?.[0] || product.images?.[0];
+  if (!image) {
+    return '';
+  }
+  if (typeof image === 'string') {
+    return image;
+  }
+  return image.thumbnail || image.mediumUrl || image.medium?.url || image.displayUrl || image.url || '';
+}
+
+function buildOptimisticItem(product, color, qty) {
+  const salePrice = Number(product.salePrice || 0);
+  return {
+    productId: product.id,
+    slug: product.slug,
+    name: product.name,
+    category: product.category,
+    color: color || product.colors?.[0]?.name || 'Default',
+    qty,
+    salePrice,
+    originalPrice: Number(product.originalPrice || salePrice),
+    price: salePrice,
+    lineTotal: salePrice * qty,
+    image: resolveImage(product),
+    stockQuantity: Math.max(0, Math.floor(Number(product.stockQuantity || 0))),
+    inStock: Boolean(product.inStock) && !product.soldOut,
+  };
+}
+
 export function CartProvider({ children }) {
   const { userProfile } = useAuth();
-  const [items, setItems] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(CART_KEY) || '[]');
-    } catch {
-      return [];
+  const [cartItems, setCartItems] = useState(readStoredCart);
+  const [quotedItems, setQuotedItems] = useState([]);
+  const [unavailableItems, setUnavailableItems] = useState([]);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+
+  const refreshQuote = useCallback(async (items = cartItems) => {
+    if (!items.length) {
+      setQuotedItems([]);
+      setUnavailableItems([]);
+      return;
     }
-  });
+
+    setQuoteLoading(true);
+    try {
+      const quote = await cartApi.quote(items);
+      const liveItems = quote.items || [];
+      const nextCartItems = liveItems.map((item) => ({
+        productId: item.productId,
+        color: item.color || '',
+        qty: item.qty,
+      }));
+
+      if (!sameCartItems(items, nextCartItems)) {
+        setCartItems(nextCartItems);
+      }
+
+      setQuotedItems(liveItems);
+      setUnavailableItems(quote.unavailableItems || []);
+    } catch (error) {
+      toast.error(error.message || 'Unable to refresh cart prices');
+    } finally {
+      setQuoteLoading(false);
+    }
+  }, [cartItems]);
 
   useEffect(() => {
-    localStorage.setItem(CART_KEY, JSON.stringify(items));
-  }, [items]);
+    localStorage.setItem(CART_KEY, JSON.stringify(cartItems));
+    refreshQuote(cartItems);
+  }, [cartItems, refreshQuote]);
 
   useEffect(() => {
     if (userProfile?.uid) {
-      mergeUserProfile(userProfile.uid, { cart: items }).catch(() => {
+      mergeUserProfile(userProfile.uid, { cart: cartItems }).catch(() => {
         //
       });
     }
-  }, [items, userProfile?.uid]);
+  }, [cartItems, userProfile?.uid]);
 
   const value = useMemo(() => {
-    const subtotal = items.reduce((sum, item) => sum + item.salePrice * item.qty, 0);
-    const itemCount = items.reduce((sum, item) => sum + item.qty, 0);
+    const subtotal = quotedItems.reduce((sum, item) => sum + Number(item.salePrice || 0) * item.qty, 0);
+    const itemCount = cartItems.reduce((sum, item) => sum + item.qty, 0);
 
     return {
-      items,
+      items: quotedItems,
+      rawItems: cartItems,
+      unavailableItems,
+      quoteLoading,
       itemCount,
       subtotal,
+      refreshQuote: () => refreshQuote(cartItems),
       addToCart(product, color, quantity = 1) {
         const stockQuantity = Math.max(0, Math.floor(Number(product.stockQuantity || 0)));
         const resolvedColor = color?.name || product.colors?.[0]?.name || 'Default';
+
         if (product.soldOut || !product.inStock || stockQuantity <= 0) {
           toast.error('This item is sold out');
           return false;
         }
 
-        const existingItem = items.find(
+        const existingItem = cartItems.find(
           (item) => item.productId === product.id && item.color === resolvedColor,
         );
         const nextQty = (existingItem?.qty || 0) + quantity;
@@ -55,73 +150,65 @@ export function CartProvider({ children }) {
           return false;
         }
 
-        setItems((current) => {
+        setCartItems((current) => {
           const existingIndex = current.findIndex(
             (item) => item.productId === product.id && item.color === resolvedColor,
           );
-          const currentNextQty = (existingIndex >= 0 ? current[existingIndex].qty : 0) + quantity;
 
           if (existingIndex >= 0) {
-            const next = [...current];
-            next[existingIndex] = {
-              ...next[existingIndex],
-              qty: Math.min(currentNextQty, stockQuantity),
-              stockQuantity,
-            };
-            return next;
+            return current.map((item, index) =>
+              index === existingIndex ? { ...item, qty: nextQty } : item,
+            );
           }
 
-          return [
-            ...current,
-            {
-              productId: product.id,
-              name: product.name,
-              image: product.images[0],
-              category: product.category,
-              color: resolvedColor,
-              qty: quantity,
-              salePrice: product.salePrice,
-              originalPrice: product.originalPrice,
-              stockQuantity,
-              slug: product.slug,
-            },
-          ];
+          return [...current, { productId: product.id, color: resolvedColor, qty: quantity }];
+        });
+
+        setQuotedItems((current) => {
+          const existingIndex = current.findIndex(
+            (item) => item.productId === product.id && item.color === resolvedColor,
+          );
+
+          if (existingIndex >= 0) {
+            return current.map((item, index) =>
+              index === existingIndex ? { ...item, qty: nextQty, lineTotal: item.salePrice * nextQty } : item,
+            );
+          }
+
+          return [...current, buildOptimisticItem(product, resolvedColor, quantity)];
         });
 
         toast.success('Added to cart');
         return true;
       },
       updateQuantity(productId, color, qty) {
-        setItems((current) =>
+        setCartItems((current) =>
           current
             .map((item) => {
               if (item.productId !== productId || item.color !== color) {
                 return item;
               }
-
-              const maxQty = Math.max(0, Math.floor(Number(item.stockQuantity || 0)));
-              const nextQty = Math.max(1, qty);
-              if (maxQty && nextQty > maxQty) {
-                toast.error(`Only ${maxQty} in stock`);
-                return { ...item, qty: maxQty };
-              }
-
-              return { ...item, qty: nextQty };
+              return { ...item, qty: Math.max(1, Math.floor(Number(qty || 1))) };
             })
             .filter((item) => item.qty > 0),
         );
       },
       removeFromCart(productId, color) {
-        setItems((current) =>
+        setCartItems((current) =>
           current.filter((item) => !(item.productId === productId && item.color === color)),
         );
-        toast('Removed from cart', { icon: '🛒' });
+        setQuotedItems((current) =>
+          current.filter((item) => !(item.productId === productId && item.color === color)),
+        );
+        toast('Removed from cart');
       },
       clearCart() {
-        setItems([]);
+        setCartItems([]);
+        setQuotedItems([]);
+        setUnavailableItems([]);
       },
     };
-  }, [items, userProfile?.uid]);
+  }, [cartItems, quotedItems, unavailableItems, quoteLoading, refreshQuote]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

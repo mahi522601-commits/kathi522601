@@ -10,7 +10,7 @@ import { formatPrice } from '../utils/formatPrice';
 
 export default function Cart() {
   const navigate = useNavigate();
-  const { items, subtotal, updateQuantity, removeFromCart } = useCart();
+  const { items, itemCount, subtotal, updateQuantity, removeFromCart, quoteLoading } = useCart();
   const [couponCode, setCouponCode] = useState('');
   const [coupon, setCoupon] = useState(null);
   const total = subtotal - (coupon?.discountAmount || 0);
@@ -35,7 +35,7 @@ export default function Cart() {
         <div className="page-shell">
           <h1 className="section-title">Your Cart</h1>
 
-          {!items.length ? (
+          {!itemCount ? (
             <div className="mt-10 rounded-[1.8rem] border border-dashed border-borderwarm bg-white px-6 py-16 text-center">
               <p className="font-heading text-4xl text-primary">Your cart is empty</p>
               <p className="mt-3 text-sm text-muted">Let&apos;s find a piece you&apos;ll love wearing.</p>
@@ -46,7 +46,9 @@ export default function Cart() {
           ) : (
             <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_360px]">
               <div className="space-y-4">
-                {items.map((item) => (
+                {quoteLoading && !items.length ? (
+                  <div className="card-surface p-6 text-sm text-muted">Refreshing latest product prices...</div>
+                ) : items.map((item) => (
                   <div key={`${item.productId}-${item.color}`} className="card-surface flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
                     <img src={item.image} alt={item.name} className="h-32 w-28 rounded-[1.3rem] object-cover" loading="lazy" />
                     <div className="flex-1">

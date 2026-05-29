@@ -4,6 +4,7 @@ import {
   sanitizeCoupon,
   validateCouponForSubtotal,
 } from './coupons.js';
+import { quoteCartItems } from './cartPricing.js';
 
 function buildOrderNumber(orderCount) {
   return `KC-${new Date().getFullYear()}-${String(orderCount + 1).padStart(4, '0')}`;
@@ -27,15 +28,6 @@ function addMonths(date, months) {
 
 function buildRewardCouponCode(orderCount) {
   return `KCLOVE${String(orderCount + 1).padStart(4, '0')}`;
-}
-
-function normalizeOrderItems(items) {
-  return Array.isArray(items)
-    ? items.map((item) => ({
-        ...item,
-        qty: Math.max(0, Math.floor(Number(item.qty || item.quantity || 0))),
-      }))
-    : [];
 }
 
 async function reserveOrderStock(items) {
@@ -88,11 +80,18 @@ export async function createStoredOrder(payload) {
   const orders = await listDocuments('orders');
   const createdAt = payload.createdAt || new Date().toISOString();
   const initialStatus = payload.status || 'Pending';
-  const items = normalizeOrderItems(payload.items);
-  const subtotal = Number(payload.subtotal ?? payload.pricing?.subtotal ?? 0);
+  const cartQuote = await quoteCartItems(payload.items, { strictStock: true });
+  const items = cartQuote.items;
+  const subtotal = cartQuote.subtotal;
   const couponCode = normalizeCouponCode(payload.couponCode || payload.pricing?.couponCode);
   let couponPatch = null;
   let verifiedDiscount = Number(payload.discount ?? payload.pricing?.discount ?? 0);
+
+  if (!items.length) {
+    const error = new Error('Order must contain at least one available item');
+    error.status = 400;
+    throw error;
+  }
 
   if (couponCode) {
     const usedCoupon = sanitizeCoupon(await getDocument('coupons', couponCode));
@@ -115,14 +114,14 @@ export async function createStoredOrder(payload) {
     items,
     couponCode: couponCode || null,
     discount: verifiedDiscount,
-    total: couponCode ? Math.max(0, subtotal - verifiedDiscount) : payload.total,
+    total: Math.max(0, subtotal - verifiedDiscount),
     pricing: {
       ...(payload.pricing || {}),
       subtotal,
       discount: verifiedDiscount,
       couponCode: couponCode || null,
       shipping: Number(payload.pricing?.shipping || payload.shippingCharge || 0),
-      total: couponCode ? Math.max(0, subtotal - verifiedDiscount) : Number(payload.total || 0),
+      total: Math.max(0, subtotal - verifiedDiscount),
     },
   };
 

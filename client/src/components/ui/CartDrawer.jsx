@@ -16,7 +16,7 @@ const cartDrawerVariants = {
 };
 
 export default function CartDrawer({ open, onClose }) {
-  const { items, itemCount, subtotal, updateQuantity, removeFromCart } = useCart();
+  const { items, itemCount, subtotal, updateQuantity, removeFromCart, quoteLoading } = useCart();
   const navigate = useNavigate();
   const [orderNoteOpen, setOrderNoteOpen] = useState(false);
   const [couponOpen, setCouponOpen] = useState(false);
@@ -72,9 +72,13 @@ export default function CartDrawer({ open, onClose }) {
             </div>
 
             <div className="flex-1 overflow-auto px-6 py-5">
-              {items.length ? (
+              {itemCount ? (
                 <div className="space-y-4">
-                  {items.map((item) => (
+                  {quoteLoading && !items.length ? (
+                    <div className="rounded-[1.4rem] border border-borderwarm bg-white p-4 text-sm text-muted">
+                      Refreshing latest prices...
+                    </div>
+                  ) : items.map((item) => (
                     <div key={`${item.productId}-${item.color}`} className="rounded-[1.4rem] border border-borderwarm bg-white p-3">
                       <div className="flex gap-3">
                         <img

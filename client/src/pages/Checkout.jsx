@@ -85,7 +85,7 @@ function resolveImageUrl(image) {
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const { items, subtotal, clearCart } = useCart();
+  const { items, rawItems, itemCount, subtotal, clearCart, quoteLoading } = useCart();
   const { userProfile, updateProfileFields } = useAuth();
   const [step, setStep] = useState(0);
   const [couponCode, setCouponCode] = useState('');
@@ -183,7 +183,7 @@ export default function Checkout() {
         state: form.state,
         pincode: form.pincode,
       },
-      items,
+      items: rawItems,
       subtotal,
       couponCode: coupon?.code || null,
       discount: coupon?.discountAmount || 0,
@@ -204,8 +204,13 @@ export default function Checkout() {
       return;
     }
 
-    if (!items.length) {
+    if (!itemCount) {
       toast.error('Your cart is empty');
+      return;
+    }
+
+    if (quoteLoading) {
+      toast.error('Please wait while cart prices refresh');
       return;
     }
 
@@ -265,7 +270,7 @@ export default function Checkout() {
     }
   }
 
-  if (!items.length && step === 0) {
+  if (!itemCount && step === 0) {
     return (
       <section className="section-block">
         <div className="page-shell py-20 text-center">
@@ -487,7 +492,11 @@ export default function Checkout() {
                   </label>
 
                   <div className="space-y-3">
-                    {items.map((item) => (
+                    {quoteLoading && !items.length ? (
+                      <p className="rounded-2xl border border-borderwarm bg-white p-4 text-sm text-muted">
+                        Refreshing latest prices...
+                      </p>
+                    ) : items.map((item) => (
                       <div key={`${item.productId}-${item.color}`} className="flex gap-3 rounded-2xl border border-borderwarm bg-white p-3">
                         <img src={item.image} alt={item.name} className="h-16 w-14 rounded-xl object-cover" />
                         <div className="min-w-0 flex-1">
@@ -515,7 +524,9 @@ export default function Checkout() {
               <h2 className="mb-5 font-heading text-3xl text-primary">Order Summary</h2>
 
               <div className="max-h-64 space-y-3 overflow-y-auto pr-1">
-                {items.map((item) => (
+                {quoteLoading && !items.length ? (
+                  <p className="text-sm text-muted">Refreshing latest prices...</p>
+                ) : items.map((item) => (
                   <div key={`${item.productId}-${item.color}`} className="flex gap-3">
                     <img src={item.image} alt={item.name} className="h-14 w-12 rounded-xl object-cover" />
                     <div className="min-w-0 flex-1">
