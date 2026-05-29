@@ -7,6 +7,7 @@ import { formatPrice } from '../../utils/formatPrice';
 import ColorSwatch from './ColorSwatch';
 import QuantitySelector from './QuantitySelector';
 import { CloseIcon, HeartIcon } from './Icons';
+import SafeImage from './SafeImage';
 
 const modalVariants = {
   hidden: { opacity: 0, scale: 0.95 },
@@ -25,7 +26,8 @@ export default function QuickViewModal({ open, onClose, product }) {
     return null;
   }
 
-  const images = product.images?.length ? product.images : ['/logo.png'];
+  const sourceImages = product.imageObjects?.length ? product.imageObjects : product.images || [];
+  const images = sourceImages.length ? sourceImages : ['/logo.png'];
   const stockQuantity = Math.max(0, Math.floor(Number(product.stockQuantity || 0)));
   const isAvailable = product.inStock && !product.soldOut && stockQuantity > 0;
 
@@ -58,15 +60,19 @@ export default function QuickViewModal({ open, onClose, product }) {
             <div className="grid max-h-[85vh] overflow-auto lg:grid-cols-2">
               <div className="bg-white p-5 md:p-7">
                 <div className="overflow-hidden rounded-[1.6rem] bg-cream">
-                  <img
-                    src={images[activeImage]}
+                  <SafeImage
+                    src={typeof images[activeImage] === 'string' ? images[activeImage] : images[activeImage]?.displayUrl || images[activeImage]?.url || images[activeImage]?.thumbnail}
                     alt={product.name}
                     className="h-[360px] w-full object-cover md:h-[520px]"
                     loading="lazy"
+                    minValidWidth={300}
+                    minValidHeight={300}
                   />
                 </div>
                 <div className="mt-4 grid grid-cols-4 gap-3">
-                  {images.slice(0, 4).map((image, index) => (
+                  {images.slice(0, 4).map((image, index) => {
+                    const thumbnail = typeof image === 'string' ? image : image.thumbnail || image.displayUrl || image.url;
+                    return (
                     <button
                       key={`${image}-${index}`}
                       type="button"
@@ -75,9 +81,10 @@ export default function QuickViewModal({ open, onClose, product }) {
                         activeImage === index ? 'border-primary' : 'border-borderwarm'
                       }`}
                     >
-                      <img src={image} alt="" className="h-24 w-full object-cover" loading="lazy" />
+                      <SafeImage src={thumbnail} alt="" className="h-24 w-full object-cover" loading="lazy" />
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 

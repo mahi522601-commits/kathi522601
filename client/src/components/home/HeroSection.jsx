@@ -5,6 +5,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getSiteSettings, fallbackSiteSettings } from '../../firebase/settingsService';
 import { useProducts } from '../../hooks/useProducts';
 import { formatPrice } from '../../utils/formatPrice';
+import SafeImage from '../ui/SafeImage';
 
 const AUTO_SLIDE_MS = 4500;
 
@@ -17,7 +18,19 @@ function resolveImageUrl(image) {
     return image;
   }
 
-  return image.url || image.displayUrl || image.medium?.url || image.thumbnail || '';
+  return image.displayUrl || image.url || image.medium?.url || image.thumbnail || '';
+}
+
+function resolvePreviewImageUrl(image) {
+  if (!image) {
+    return '';
+  }
+
+  if (typeof image === 'string') {
+    return image;
+  }
+
+  return image.thumbnail || image.medium?.url || image.displayUrl || image.url || '';
 }
 
 const imageVariants = {
@@ -83,6 +96,7 @@ export default function HeroSection() {
           product,
           href: slide.redirectUrl || (product ? `/product/${product.id}` : '/collections'),
           imageUrl: resolveImageUrl(slide.image || product?.imageObjects?.[0] || product?.images?.[0]),
+          previewImageUrl: resolvePreviewImageUrl(slide.image || product?.imageObjects?.[0] || product?.images?.[0]),
           title: product?.name || slide.title || 'Khyathi Collections',
           subtitle:
             slide.subtitle ||
@@ -275,21 +289,27 @@ export default function HeroSection() {
           <div className="order-1 mx-auto w-full max-w-[560px] lg:order-2">
             <div className="relative aspect-[3/4] min-h-[410px] overflow-hidden rounded-t-[16rem] border border-gold/40 bg-[#fffaf1] shadow-[0_28px_80px_rgba(28,18,10,0.18)] sm:min-h-[560px] lg:min-h-[640px]">
               <AnimatePresence mode="wait" custom={direction}>
-                <motion.img
+                <motion.div
                   key={`frame-${activeIndex}`}
                   custom={direction}
                   variants={imageVariants}
                   initial="enter"
                   animate="center"
                   exit="exit"
-                  src={activeSlide.imageUrl}
-                  alt={activeSlide.title}
                   className="absolute inset-0 h-full w-full object-contain object-center"
-                  loading="eager"
-                  fetchPriority="high"
-                  decoding="async"
-                  draggable="false"
-                />
+                >
+                  <SafeImage
+                    src={activeSlide.imageUrl}
+                    alt={activeSlide.title}
+                    className="h-full w-full object-contain object-center"
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
+                    draggable="false"
+                    minValidWidth={600}
+                    minValidHeight={600}
+                  />
+                </motion.div>
               </AnimatePresence>
               <div className="pointer-events-none absolute inset-x-6 bottom-6 top-6 rounded-t-[16rem] border border-gold/25" />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#fffaf1] to-transparent" />
@@ -337,8 +357,8 @@ export default function HeroSection() {
                       : 'border-primary/10 opacity-55 hover:opacity-85'
                   }`}
                 >
-                  <img
-                    src={slide.imageUrl}
+                  <SafeImage
+                    src={slide.previewImageUrl || slide.imageUrl}
                     alt={slide.title}
                     className="h-full w-full object-cover object-top"
                     loading="lazy"

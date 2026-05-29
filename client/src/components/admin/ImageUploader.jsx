@@ -23,12 +23,38 @@ function fileToBase64(file) {
   });
 }
 
+async function fileToOptimizedBase64(file) {
+  if (!file.type.startsWith('image/') || file.type === 'image/gif') {
+    return fileToBase64(file);
+  }
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    const maxSide = 1600;
+    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d', { alpha: false });
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, width, height);
+    context.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close?.();
+
+    return canvas.toDataURL('image/webp', 0.82);
+  } catch {
+    return fileToBase64(file);
+  }
+}
+
 export default function ImageUploader({ value = [], onChange, productName = 'product', cleanupOnRemove = false }) {
   const [uploading, setUploading] = useState({});
 
   async function uploadFile(file, index) {
     setUploading((current) => ({ ...current, [file.name]: 'uploading' }));
-    const base64 = await fileToBase64(file);
+    const base64 = await fileToOptimizedBase64(file);
 
     try {
       const image = await uploadApi.uploadSingle(base64, `${productName}-${Date.now()}-${index}`);
@@ -108,7 +134,7 @@ export default function ImageUploader({ value = [], onChange, productName = 'pro
           {isDragActive ? 'Drop images here...' : 'Drag and drop images, or click to browse'}
         </p>
         <p className="mt-1 text-sm text-muted">
-          JPG, PNG, WebP. Full quality preserved with ImgBB.
+          JPG, PNG, WebP. Images are optimized before upload for faster loading.
         </p>
       </div>
 

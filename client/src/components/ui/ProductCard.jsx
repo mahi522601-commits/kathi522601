@@ -8,6 +8,7 @@ import Badge from './Badge';
 import ColorSwatch from './ColorSwatch';
 import { EyeIcon, HeartIcon } from './Icons';
 import QuickViewModal from './QuickViewModal';
+import SafeImage from './SafeImage';
 
 function resolveCardImage(image) {
   if (!image) {
@@ -18,7 +19,7 @@ function resolveCardImage(image) {
     return image;
   }
 
-  return image.displayUrl || image.url || image.thumbnail || '';
+  return image.thumbnail || image.medium?.url || image.displayUrl || image.url || '';
 }
 
 export default function ProductCard({ product, priority = false }) {
@@ -65,7 +66,7 @@ export default function ProductCard({ product, priority = false }) {
           <Link to={`/product/${product.id}`} className="block">
             <div className="relative aspect-[9/16] min-h-[310px] bg-cream sm:min-h-[420px] lg:min-h-[460px]">
               {(cardImages.length ? cardImages : [primaryImage]).map((image, index) => (
-                <img
+                <SafeImage
                   key={`${image}-${index}`}
                   src={image}
                   alt={product.name}

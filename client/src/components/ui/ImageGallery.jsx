@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 import ImageViewer from './ImageViewer';
+import SafeImage from './SafeImage';
 
 function imageUrl(image) {
   return image?.displayUrl || image?.url || image?.thumbnail || image || '';
@@ -89,7 +90,7 @@ export default function ImageGallery({ images, productName }) {
                 index === activeIndex ? 'border-gold' : 'border-borderwarm'
               }`}
             >
-              <img
+              <SafeImage
                 src={image.thumbnail || imageUrl(image)}
                 alt={`${productName} view ${index + 1}`}
                 className="h-full w-full object-cover"
@@ -120,10 +121,12 @@ export default function ImageGallery({ images, productName }) {
               }
             }}
           >
-            <img
+            <SafeImage
               src={imageUrl(galleryImages[activeIndex])}
               alt={productName}
               className="h-full w-full object-cover"
+              minValidWidth={300}
+              minValidHeight={300}
               style={{
                 transformOrigin: `${lensPos.x}% ${lensPos.y}%`,
                 transform: isHovering ? 'scale(1.5)' : 'scale(1)',
@@ -175,7 +178,7 @@ export default function ImageGallery({ images, productName }) {
                   index === activeIndex ? 'border-gold' : 'border-borderwarm'
                 }`}
               >
-                <img src={image.thumbnail || imageUrl(image)} alt="" className="h-full w-full object-cover" />
+                <SafeImage src={image.thumbnail || imageUrl(image)} alt="" className="h-full w-full object-cover" />
               </button>
             ))}
           </div>
