@@ -457,6 +457,15 @@ export default function OrdersTable({
               </button>
               <button
                 type="button"
+                className="action-button-outline gap-2 border-rose-200 text-rose-700 hover:border-rose-300"
+                onClick={() => setDeleteTarget(selectedOrder)}
+                disabled={deletingOrderId === getOrderId(selectedOrder)}
+              >
+                <Trash2 size={16} />
+                {deletingOrderId === getOrderId(selectedOrder) ? 'Deleting...' : 'Delete'}
+              </button>
+              <button
+                type="button"
                 className="action-button"
                 onClick={saveSelectedStatus}
                 disabled={savingOrderId === getOrderId(selectedOrder)}
