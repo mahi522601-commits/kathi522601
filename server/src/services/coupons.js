@@ -1,5 +1,6 @@
 export function normalizeCouponCode(code = '') {
-  return String(code).trim().toUpperCase().replace(/\s+/g, '');
+  const normalized = (code == null ? '' : String(code)).trim().toUpperCase().replace(/\s+/g, '');
+  return normalized === 'NULL' || normalized === 'UNDEFINED' ? '' : normalized;
 }
 
 function normalizeDate(value) {
