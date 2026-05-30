@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, ImagePlus, QrCode, ShieldCheck, Smartphone } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Check, ImagePlus, Loader2, QrCode, ShieldCheck, Smartphone } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
@@ -94,6 +94,9 @@ export default function Checkout() {
   const [selectedPaymentApp, setSelectedPaymentApp] = useState(PAYMENT_APPS[0]);
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [paymentPreview, setPaymentPreview] = useState('');
+  const [paymentUploadStatus, setPaymentUploadStatus] = useState('idle');
+  const [uploadedPaymentProof, setUploadedPaymentProof] = useState(null);
+  const paymentUploadToken = useRef(0);
   const [form, setForm] = useState({
     fullName: userProfile?.name || '',
     phone: userProfile?.phone || '',
@@ -130,15 +133,71 @@ export default function Checkout() {
 
   const total = useMemo(() => subtotal - (coupon?.discountAmount || 0), [coupon, subtotal]);
   const upiQrUrl = useMemo(() => buildUpiQrUrl(total), [total]);
+  const receiptButtonDisabled = saving || paymentUploadStatus === 'uploading';
+  const receiptButtonLabel =
+    paymentUploadStatus === 'uploading'
+      ? 'Uploading Screenshot...'
+      : saving
+        ? 'Creating Receipt...'
+        : `Get Receipt | ${formatPrice(total)}`;
 
   async function applyCoupon() {
+    const code = couponCode.trim();
+
+    if (!code) {
+      setCoupon(null);
+      return;
+    }
+
     try {
-      const response = await validateCoupon(couponCode, subtotal);
+      const response = await validateCoupon(code, subtotal);
       setCoupon(response);
       toast.success(`Coupon applied. ${response.discount}% off`);
     } catch (error) {
       setCoupon(null);
       toast.error(error.message || 'Invalid coupon code');
+    }
+  }
+
+  async function handlePaymentScreenshotChange(event) {
+    const file = event.target.files?.[0] || null;
+    const uploadToken = paymentUploadToken.current + 1;
+    paymentUploadToken.current = uploadToken;
+    setPaymentScreenshot(file);
+    setUploadedPaymentProof(null);
+
+    if (!file) {
+      setPaymentUploadStatus('idle');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setPaymentScreenshot(null);
+      setPaymentUploadStatus('error');
+      event.target.value = '';
+      toast.error('Please upload an image screenshot');
+      return;
+    }
+
+    setPaymentUploadStatus('uploading');
+
+    try {
+      const proof = await uploadPaymentScreenshot(file, `payment-proof-${form.phone || Date.now()}`);
+
+      if (paymentUploadToken.current !== uploadToken) {
+        return;
+      }
+
+      setUploadedPaymentProof(proof);
+      setPaymentUploadStatus('uploaded');
+    } catch (error) {
+      if (paymentUploadToken.current !== uploadToken) {
+        return;
+      }
+
+      setUploadedPaymentProof(null);
+      setPaymentUploadStatus('error');
+      toast.error(error.message || 'Payment screenshot upload failed');
     }
   }
 
@@ -226,12 +285,33 @@ export default function Checkout() {
       return;
     }
 
+    if (paymentUploadStatus === 'uploading') {
+      toast.error('Please wait while the payment screenshot uploads');
+      return;
+    }
+
+    if (paymentUploadStatus === 'error') {
+      toast.error('Payment screenshot upload failed. Please upload the screenshot again.');
+      return;
+    }
+
+    let proofReadyForOrder = Boolean(uploadedPaymentProof);
+
     setSaving(true);
     try {
-      const uploadedProof = await uploadPaymentScreenshot(
-        paymentScreenshot,
-        `payment-proof-${form.phone || Date.now()}`,
-      );
+      let uploadedProof = uploadedPaymentProof;
+
+      if (!uploadedProof) {
+        setPaymentUploadStatus('uploading');
+        uploadedProof = await uploadPaymentScreenshot(
+          paymentScreenshot,
+          `payment-proof-${form.phone || Date.now()}`,
+        );
+        setUploadedPaymentProof(uploadedProof);
+        setPaymentUploadStatus('uploaded');
+      }
+      proofReadyForOrder = true;
+
       const proofUrl = resolveImageUrl(uploadedProof);
       const order = await placeOrder(
         buildOrderPayload({
@@ -271,6 +351,9 @@ export default function Checkout() {
         replace: true,
       });
     } catch (error) {
+      if (!proofReadyForOrder) {
+        setPaymentUploadStatus('error');
+      }
       toast.error(error.message || 'Unable to place order');
     } finally {
       setSaving(false);
@@ -479,15 +562,34 @@ export default function Checkout() {
                     </div>
                   </div>
 
-                  <label className="block rounded-[16px] border border-dashed border-gold bg-white p-4 text-center sm:p-5">
+                  <label
+                    className={`block rounded-[16px] border border-dashed bg-white p-4 text-center transition sm:p-5 ${
+                      paymentUploadStatus === 'error'
+                        ? 'border-rose-300'
+                        : paymentUploadStatus === 'uploaded'
+                          ? 'border-emerald-300'
+                          : 'border-gold'
+                    }`}
+                  >
                     <input
                       type="file"
                       accept="image/*"
                       className="sr-only"
-                      onChange={(event) => setPaymentScreenshot(event.target.files?.[0] || null)}
+                      disabled={saving || paymentUploadStatus === 'uploading'}
+                      onClick={(event) => {
+                        event.currentTarget.value = '';
+                      }}
+                      onChange={handlePaymentScreenshotChange}
                     />
                     {paymentPreview ? (
-                      <img src={paymentPreview} alt="Payment screenshot preview" className="mx-auto max-h-52 rounded-[14px] object-contain sm:max-h-64" />
+                      <span className="relative mx-auto block w-fit">
+                        <img src={paymentPreview} alt="Payment screenshot preview" className="max-h-52 rounded-[14px] object-contain sm:max-h-64" />
+                        {paymentUploadStatus === 'uploading' ? (
+                          <span className="absolute inset-0 flex items-center justify-center rounded-[14px] bg-black/45 text-white">
+                            <Loader2 className="animate-spin" size={32} />
+                          </span>
+                        ) : null}
+                      </span>
                     ) : (
                       <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-cream text-primary">
                         <ImagePlus size={24} />
@@ -496,6 +598,22 @@ export default function Checkout() {
                     <span className="mt-3 block text-sm font-semibold text-primary">
                       {paymentScreenshot ? paymentScreenshot.name : 'Upload payment screenshot'}
                     </span>
+                    {paymentUploadStatus === 'uploading' ? (
+                      <span className="mx-auto mt-3 block max-w-xs overflow-hidden rounded-full bg-cream">
+                        <span className="block h-2 w-2/3 animate-pulse rounded-full bg-gold" />
+                      </span>
+                    ) : null}
+                    {paymentUploadStatus === 'uploaded' ? (
+                      <span className="mt-2 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                        <Check size={14} />
+                        Screenshot uploaded
+                      </span>
+                    ) : null}
+                    {paymentUploadStatus === 'error' ? (
+                      <span className="mt-2 inline-flex rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">
+                        Upload failed. Choose the screenshot again.
+                      </span>
+                    ) : null}
                   </label>
 
                   <div className="space-y-3">
@@ -519,8 +637,8 @@ export default function Checkout() {
                     <button type="button" className="action-button-outline flex-1" onClick={() => setStep(0)}>
                       Back
                     </button>
-                    <button type="button" className="action-button flex-1 py-4 text-base" onClick={finishOrder} disabled={saving}>
-                      {saving ? 'Uploading Proof...' : `Get Receipt | ${formatPrice(total)}`}
+                    <button type="button" className="action-button flex-1 py-4 text-base" onClick={finishOrder} disabled={receiptButtonDisabled}>
+                      {receiptButtonLabel}
                     </button>
                   </div>
                 </motion.div>
