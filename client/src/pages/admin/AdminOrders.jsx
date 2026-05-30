@@ -3,12 +3,13 @@ import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import OrdersTable from '../../components/admin/OrdersTable';
-import { getOrders, updateOrderStatus } from '../../firebase/ordersService';
+import { deleteOrder, getOrders, updateOrderStatus } from '../../firebase/ordersService';
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingOrderId, setSavingOrderId] = useState('');
+  const [deletingOrderId, setDeletingOrderId] = useState('');
 
   const loadOrders = useCallback(async ({ quiet = false } = {}) => {
     if (!quiet) {
@@ -54,6 +55,21 @@ export default function AdminOrders() {
     }
   }
 
+  async function removeOrder(orderId) {
+    setDeletingOrderId(orderId);
+    try {
+      await deleteOrder(orderId);
+      setOrders((current) => current.filter((order) => order.id !== orderId && order._id !== orderId));
+      toast.success('Order deleted');
+      return true;
+    } catch (error) {
+      toast.error(error.message || 'Unable to delete order');
+      return false;
+    } finally {
+      setDeletingOrderId('');
+    }
+  }
+
   return (
     <>
       <Helmet>
@@ -68,7 +84,14 @@ export default function AdminOrders() {
               <h1 className="mt-3 font-heading text-5xl text-white">Orders</h1>
               <p className="mt-2 text-sm text-[#d8c6aa]">Monitor, search, receipt-check, and update delivery statuses.</p>
             </div>
-            <OrdersTable orders={orders} loading={loading} savingOrderId={savingOrderId} onSaveStatus={saveStatus} />
+            <OrdersTable
+              orders={orders}
+              loading={loading}
+              savingOrderId={savingOrderId}
+              deletingOrderId={deletingOrderId}
+              onSaveStatus={saveStatus}
+              onDeleteOrder={removeOrder}
+            />
           </div>
         </div>
       </section>

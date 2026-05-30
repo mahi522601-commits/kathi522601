@@ -3,6 +3,7 @@ import {
   createOrder,
   getOrder,
   getOrders,
+  removeOrder,
   updateOrder,
 } from '../controllers/ordersController.js';
 import { adminOnly } from '../middleware/adminOnly.js';
@@ -14,5 +15,6 @@ router.get('/', verifyToken, getOrders);
 router.get('/:id', verifyToken, getOrder);
 router.post('/', createOrder);
 router.put('/:id', verifyToken, adminOnly, updateOrder);
+router.delete('/:id', verifyToken, adminOnly, removeOrder);
 
 export default router;

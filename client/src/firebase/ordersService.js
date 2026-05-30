@@ -75,7 +75,10 @@ export async function placeOrder(order) {
   } catch (error) {
     if (import.meta.env.DEV) {
       console.warn('Falling back to local order storage.', error);
+    } else {
+      throw error;
     }
+
     const localOrder = {
       id: `order-${Date.now()}`,
       ...order,
@@ -100,8 +103,9 @@ export async function getOrders() {
   } catch (error) {
     if (import.meta.env.DEV) {
       console.warn('Falling back to local orders.', error);
+      return readLocalOrders();
     }
-    return readLocalOrders();
+    throw error;
   }
 }
 
@@ -137,7 +141,10 @@ export async function updateOrderStatus(orderId, status) {
   } catch (error) {
     if (import.meta.env.DEV) {
       console.warn('Falling back to local order status update.', error);
+    } else {
+      throw error;
     }
+
     const orders = readLocalOrders().map((order) =>
       order.id === orderId
         ? normalizeOrder({
@@ -163,7 +170,10 @@ export async function updateOrder(orderId, patch) {
   } catch (error) {
     if (import.meta.env.DEV) {
       console.warn('Falling back to local order update.', error);
+    } else {
+      throw error;
     }
+
     const orders = readLocalOrders().map((order) =>
       order.id === orderId
         ? normalizeOrder({
@@ -175,5 +185,31 @@ export async function updateOrder(orderId, patch) {
     );
     writeLocalOrders(orders);
     return orders.find((order) => order.id === orderId) || true;
+  }
+}
+
+export async function deleteOrder(orderId) {
+  try {
+    await ordersApi.remove(orderId);
+    return true;
+  } catch (error) {
+    if (!import.meta.env.DEV) {
+      throw error;
+    }
+
+    console.warn('Falling back to local order delete.', error);
+    const orders = readLocalOrders().filter((order) => order.id !== orderId && order._id !== orderId);
+    writeLocalOrders(orders);
+
+    try {
+      const lastOrder = JSON.parse(localStorage.getItem('khyathi-last-order') || 'null');
+      if (lastOrder && (lastOrder.id === orderId || lastOrder._id === orderId)) {
+        localStorage.removeItem('khyathi-last-order');
+      }
+    } catch {
+      localStorage.removeItem('khyathi-last-order');
+    }
+
+    return true;
   }
 }

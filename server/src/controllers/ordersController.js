@@ -1,5 +1,6 @@
-﻿import { getDocument, listDocuments, updateDocument } from '../services/firestore.js';
+﻿import { deleteDocument, getDocument, listDocuments, updateDocument } from '../services/firestore.js';
 import { createStoredOrder } from '../services/orderRecords.js';
+import { deleteManyFromImgBB } from '../services/imgbb.js';
 
 export async function getOrders(req, res, next) {
   try {
@@ -82,6 +83,25 @@ export async function updateOrder(req, res, next) {
       return res.status(404).json({ success: false, error: 'Order not found' });
     }
     res.json({ success: true, order });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function removeOrder(req, res, next) {
+  try {
+    const existingOrder = await getDocument('orders', req.params.id);
+    if (!existingOrder) {
+      return res.status(404).json({ success: false, error: 'Order not found' });
+    }
+
+    await deleteDocument('orders', req.params.id);
+    await deleteManyFromImgBB([
+      existingOrder.paymentProof,
+      existingOrder.paymentScreenshot,
+    ].filter(Boolean));
+
+    res.json({ success: true });
   } catch (error) {
     next(error);
   }

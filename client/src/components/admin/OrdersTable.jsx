@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Download, Eye, ReceiptText, Search, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { Download, Eye, ReceiptText, Search, Trash2, X, ZoomIn, ZoomOut } from 'lucide-react';
 import OrderReceipt from '../receipt/OrderReceipt';
 import { formatPrice } from '../../utils/formatPrice';
 
@@ -29,7 +29,13 @@ function getOrderId(order) {
 }
 
 function getProofUrl(order) {
-  const image = order?.paymentScreenshot || order?.paymentScreenshotUrl || order?.paymentProofUrl;
+  const image =
+    order?.paymentScreenshot ||
+    order?.paymentProof ||
+    order?.paymentScreenshotUrl ||
+    order?.paymentProofUrl ||
+    order?.paymentReceiptUrl ||
+    order?.screenshotUrl;
 
   if (!image) {
     return '';
@@ -39,7 +45,7 @@ function getProofUrl(order) {
     return image;
   }
 
-  return image.displayUrl || image.url || image.thumbnail || image.secure_url || '';
+  return image.displayUrl || image.display_url || image.url || image.thumbnail || image.secure_url || image.mediumUrl || '';
 }
 
 function getItemImage(item) {
@@ -176,10 +182,18 @@ function downloadImage(url, orderNumber) {
   link.remove();
 }
 
-export default function OrdersTable({ orders, loading = false, savingOrderId = '', onSaveStatus }) {
+export default function OrdersTable({
+  orders,
+  loading = false,
+  savingOrderId = '',
+  deletingOrderId = '',
+  onSaveStatus,
+  onDeleteOrder,
+}) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [receiptOrder, setReceiptOrder] = useState(null);
   const [proofPreview, setProofPreview] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [proofZoom, setProofZoom] = useState(1);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -234,6 +248,28 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
     }
   }
 
+  async function confirmDelete() {
+    if (!deleteTarget || !onDeleteOrder) {
+      return;
+    }
+
+    const targetId = getOrderId(deleteTarget);
+    const deleted = await onDeleteOrder(targetId);
+
+    if (deleted) {
+      if (selectedOrder && getOrderId(selectedOrder) === targetId) {
+        setSelectedOrder(null);
+      }
+      if (receiptOrder && getOrderId(receiptOrder) === targetId) {
+        setReceiptOrder(null);
+      }
+      if (proofPreview && getOrderId(proofPreview) === targetId) {
+        setProofPreview(null);
+      }
+      setDeleteTarget(null);
+    }
+  }
+
   return (
     <div className="space-y-5">
       <div className="rounded-[1.4rem] border border-borderwarm bg-white p-4 shadow-sm">
@@ -275,7 +311,7 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
 
       <div className="overflow-hidden rounded-[1.4rem] border border-borderwarm bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="min-w-[1180px] text-left text-sm">
+          <table className="min-w-[1280px] text-left text-sm">
             <thead className="bg-cream text-primary">
               <tr>
                 <th className="px-4 py-4 font-semibold">Order</th>
@@ -286,12 +322,13 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                 <th className="px-4 py-4 font-semibold">Order Status</th>
                 <th className="px-4 py-4 font-semibold">Payment Proof</th>
                 <th className="px-4 py-4 font-semibold">Receipt</th>
+                <th className="px-4 py-4 font-semibold">Delete</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="px-4 py-8 text-center text-muted" colSpan={8}>
+                  <td className="px-4 py-8 text-center text-muted" colSpan={9}>
                     Loading orders...
                   </td>
                 </tr>
@@ -356,11 +393,25 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                         View
                       </button>
                     </td>
+                    <td className="px-4 py-4">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setDeleteTarget(order);
+                        }}
+                        disabled={deletingOrderId === getOrderId(order)}
+                      >
+                        <Trash2 size={14} />
+                        {deletingOrderId === getOrderId(order) ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </td>
                   </tr>
                 );
               }) : (
                 <tr>
-                  <td className="px-4 py-8 text-center text-muted" colSpan={8}>
+                  <td className="px-4 py-8 text-center text-muted" colSpan={9}>
                     No orders found.
                   </td>
                 </tr>
@@ -492,6 +543,49 @@ export default function OrdersTable({ orders, loading = false, savingOrderId = '
                 No payment screenshot uploaded for this order.
               </div>
             )}
+          </div>
+        </div>
+      ) : null}
+
+      {deleteTarget ? (
+        <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-[1.4rem] border border-[#ead7a2] bg-[#fffaf0] p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-gold-dark">Confirm delete</p>
+                <h2 className="mt-2 font-heading text-3xl text-primary">Delete this order?</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="rounded-full bg-white p-2 text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                aria-label="Close delete confirmation"
+                disabled={deletingOrderId === getOrderId(deleteTarget)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <p className="mt-4 text-sm leading-6 text-body">
+              {deleteTarget.orderNumber || getOrderId(deleteTarget)} will be removed from admin orders. This action cannot be undone.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                className="action-button-outline"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deletingOrderId === getOrderId(deleteTarget)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="action-button bg-maroon"
+                onClick={confirmDelete}
+                disabled={deletingOrderId === getOrderId(deleteTarget)}
+              >
+                {deletingOrderId === getOrderId(deleteTarget) ? 'Deleting...' : 'Delete Order'}
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

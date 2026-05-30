@@ -17,6 +17,10 @@ const ordersApi = {
     const { data } = await axiosInstance.put(`/orders/${id}`, payload);
     return data.order;
   },
+  async remove(id) {
+    await axiosInstance.delete(`/orders/${id}`);
+    return true;
+  },
 };
 
 export default ordersApi;
